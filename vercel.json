@@ -6,6 +6,7 @@
   "outputDirectory": "packages/playground/dist",
   "functions": {
     "api/solid-playground-lint.ts": {
+      "memory": 3009,
       "includeFiles": "node_modules/**"
     }
   },

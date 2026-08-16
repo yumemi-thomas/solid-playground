@@ -11,7 +11,6 @@ export interface LintRequest {
   code: string;
   dialect: Dialect;
   fix: boolean;
-  debug?: boolean;
 }
 
 export interface NormalizedDiagnostic {
@@ -29,7 +28,6 @@ export interface LintResult {
   diagnostics: NormalizedDiagnostic[];
   output?: string;
   fixed: boolean;
-  debug?: unknown;
 }
 
 const repositoryRoot = resolve(process.cwd());
@@ -178,13 +176,10 @@ function runLinter(temporaryDirectory: string, dialect: Dialect, fix: boolean, e
     ...(fix ? ['--fix'] : []),
     'src/Playground.tsx',
   ];
-  const result = spawnSync(process.execPath, [executable, ...args], {
+  return spawnSync(process.execPath, [executable, ...args], {
     cwd: temporaryDirectory,
     encoding: 'utf8',
     env: process.env,
-  });
-  return Object.assign(result, {
-    debug: { executable, config: readFileSync(resolve(temporaryDirectory, configName), 'utf8') },
   });
 }
 
@@ -213,12 +208,15 @@ export function runPlaygroundLint(request: LintRequest): LintResult {
     for (const packageName of ['solid-checker', '@solidjs']) symlinkPackage(temporaryDirectory, packageName);
     symlinkPackage(temporaryDirectory, 'solid-js', request.dialect === 'solid-v2' ? 'solid-js-v2' : 'solid-js');
 
-    const engine = selectedEngine();
-    const lint = runLinter(temporaryDirectory, request.dialect, request.fix, engine);
+    let engine = selectedEngine();
+    let lint = runLinter(temporaryDirectory, request.dialect, request.fix, engine);
+    if (engine === 'oxlint' && (lint.error || (!lint.stdout.trim() && lint.stderr.trim()))) {
+      engine = 'eslint';
+      lint = runLinter(temporaryDirectory, request.dialect, request.fix, engine);
+    }
     if (lint.error) throw lint.error;
     if (!lint.stdout.trim() && lint.stderr.trim()) {
-      const details = `\n[DEBUG-VERCEL-LINT] ${JSON.stringify(lint.debug)}`;
-      throw new Error(`${engine} failed: ${lint.stderr.trim()}${details}`);
+      throw new Error(`${engine} failed: ${lint.stderr.trim()}`);
     }
     let parsed: unknown;
     try {
@@ -232,9 +230,6 @@ export function runPlaygroundLint(request: LintRequest): LintResult {
       diagnostics: engine === 'oxlint' ? oxlintDiagnostics(parsed) : eslintDiagnostics(parsed),
       output,
       fixed: request.fix && output !== request.code,
-      ...(request.debug
-        ? { debug: { ...lint.debug, status: lint.status, signal: lint.signal, stdout: lint.stdout, stderr: lint.stderr } }
-        : {}),
     };
   } finally {
     rmSync(temporaryDirectory, { recursive: true, force: true });
@@ -276,7 +271,6 @@ export default async function handler(request: VercelRequest, response: VercelRe
       code: body.code,
       dialect: body.dialect as 'solid-v1' | 'solid-v2',
       fix: body.fix === true,
-      debug: body.debug === true,
     });
     response.status(200).json(result);
   } catch (error) {
