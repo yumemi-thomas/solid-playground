@@ -6,19 +6,7 @@
   "outputDirectory": "packages/playground/dist",
   "functions": {
     "api/solid-playground-lint.ts": {
-      "includeFiles": [
-        "node_modules/solid-checker/**",
-        "node_modules/solid-checker-wasm/**",
-        "node_modules/@solid-checker/**",
-        "node_modules/oxlint/**",
-        "node_modules/@oxlint/**",
-        "node_modules/eslint/**",
-        "node_modules/@eslint/**",
-        "node_modules/@typescript-eslint/**",
-        "node_modules/typescript/**",
-        "node_modules/solid-js/**",
-        "node_modules/@solidjs/**"
-      ]
+      "includeFiles": "node_modules/{solid-checker,solid-checker-wasm,@solid-checker,oxlint,@oxlint,eslint,@eslint,@typescript-eslint,typescript,solid-js,@solidjs}/**"
     }
   },
   "rewrites": [
