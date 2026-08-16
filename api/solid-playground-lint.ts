@@ -52,13 +52,17 @@ function packagePath(packageName: string, sourceName = packageName) {
   for (const moduleRoot of moduleRoots) {
     const storeRoot = resolve(moduleRoot, '.pnpm');
     if (!existsSync(storeRoot)) continue;
-    const storeEntry = readdirSync(storeRoot).find((entry) => entry.startsWith(storePrefix));
-    if (!storeEntry) continue;
-    const packageRoot = resolve(storeRoot, storeEntry, 'node_modules');
-    const candidate = storeName.startsWith('@') && !storeName.includes('/')
-      ? resolve(packageRoot, storeName)
-      : resolve(packageRoot, storeName);
-    if (existsSync(candidate)) return candidate;
+    const storeEntries = readdirSync(storeRoot)
+      .filter((entry) => entry.startsWith(storePrefix))
+      .sort()
+      .reverse();
+    for (const storeEntry of storeEntries) {
+      const packageRoot = resolve(storeRoot, storeEntry, 'node_modules');
+      const candidate = storeName.startsWith('@') && !storeName.includes('/')
+        ? resolve(packageRoot, storeName)
+        : resolve(packageRoot, storeName);
+      if (existsSync(candidate)) return candidate;
+    }
   }
 
   throw new Error(`Could not find installed package ${sourceName}.`);
