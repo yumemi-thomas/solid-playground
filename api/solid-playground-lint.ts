@@ -166,6 +166,7 @@ function runLinter(temporaryDirectory: string, dialect: Dialect, fix: boolean, e
     resolve(temporaryDirectory, configName),
     '--format',
     'json',
+    ...(engine === 'oxlint' ? ['--threads', '1'] : []),
     ...(fix ? ['--fix'] : []),
     'src/Playground.tsx',
   ];
