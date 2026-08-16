@@ -51,11 +51,19 @@ function packagePath(packageName: string, sourceName = packageName) {
   const storePrefix = storeName.startsWith('@') && !storeName.includes('/')
     ? `${storeName}+`
     : `${storeName.replace('/', '+')}@`;
+  const dependencyName = packageName === '@solidjs' ? '@solidjs/web' : packageName;
+  const manifest = JSON.parse(readFileSync(resolve(repositoryRoot, 'package.json'), 'utf8')) as {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
+  const dependencySpec = manifest.dependencies?.[dependencyName] ?? manifest.devDependencies?.[dependencyName];
+  const preferredVersion = dependencySpec?.match(/(?:^|@)(\d+\.\d+\.\d+(?:-[^/]+)?)/)?.[1];
   for (const moduleRoot of moduleRoots) {
     const storeRoot = resolve(moduleRoot, '.pnpm');
     if (!existsSync(storeRoot)) continue;
     const storeEntries = readdirSync(storeRoot)
       .filter((entry) => entry.startsWith(storePrefix))
+      .filter((entry) => !preferredVersion || entry.startsWith(`${storePrefix}${preferredVersion}`))
       .sort()
       .reverse();
     for (const storeEntry of storeEntries) {
