@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -38,9 +38,30 @@ const moduleRoots = [process.cwd(), repositoryRoot].flatMap((root) => [
 ]);
 
 function packagePath(packageName: string, sourceName = packageName) {
-  const source = moduleRoots.map((root) => resolve(root, sourceName)).find((candidate) => existsSync(candidate));
-  if (!source) throw new Error(`Could not find installed package ${sourceName}.`);
-  return source;
+  const directSource = moduleRoots
+    .map((root) => resolve(root, sourceName))
+    .find((candidate) => existsSync(candidate));
+  if (directSource) return directSource;
+
+  // Vercel can retain pnpm's package store without retaining the workspace
+  // symlink for an aliased package such as `solid-js-v2`.
+  const storeName = sourceName === 'solid-js-v2' ? 'solid-js' : sourceName;
+  const storePrefix = storeName.startsWith('@') && !storeName.includes('/')
+    ? `${storeName}+`
+    : `${storeName.replace('/', '+')}@`;
+  for (const moduleRoot of moduleRoots) {
+    const storeRoot = resolve(moduleRoot, '.pnpm');
+    if (!existsSync(storeRoot)) continue;
+    const storeEntry = readdirSync(storeRoot).find((entry) => entry.startsWith(storePrefix));
+    if (!storeEntry) continue;
+    const packageRoot = resolve(storeRoot, storeEntry, 'node_modules');
+    const candidate = storeName.startsWith('@') && !storeName.includes('/')
+      ? resolve(packageRoot, storeName)
+      : resolve(packageRoot, storeName);
+    if (existsSync(candidate)) return candidate;
+  }
+
+  throw new Error(`Could not find installed package ${sourceName}.`);
 }
 
 function packageFile(packageName: string, fileName: string) {
