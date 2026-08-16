@@ -1,1 +1,1 @@
-export * from '../../api/_lint-server.ts';
+export * from '../../api/solid-playground-lint.ts';
