@@ -1,3 +1,5 @@
+import { runPlaygroundLint } from '../packages/playground/lint-server';
+
 interface VercelRequest {
   method?: string;
   body?: unknown;
@@ -20,7 +22,6 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return;
   }
   try {
-    const { runPlaygroundLint } = await import('../packages/playground/lint-server');
     const body = requestBody(request.body);
     if (typeof body.code !== 'string') {
       response.status(400).json({ message: 'code must be a string' });
