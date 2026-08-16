@@ -1,4 +1,4 @@
-import { runPlaygroundLint } from '../packages/playground/lint-server';
+import { runPlaygroundLint } from '../packages/playground/lint-server.ts';
 
 interface VercelRequest {
   method?: string;
