@@ -1,5 +1,3 @@
-import type { Dialect } from '../packages/playground/lint-server';
-
 interface VercelRequest {
   method?: string;
   body?: unknown;
@@ -34,7 +32,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     }
     const result = runPlaygroundLint({
       code: body.code,
-      dialect: body.dialect as Dialect,
+      dialect: body.dialect as 'solid-v1' | 'solid-v2',
       fix: body.fix === true,
     });
     response.status(200).json(result);
