@@ -217,7 +217,7 @@ export function runPlaygroundLint(request: LintRequest): LintResult {
     const lint = runLinter(temporaryDirectory, request.dialect, request.fix, engine);
     if (lint.error) throw lint.error;
     if (!lint.stdout.trim() && lint.stderr.trim()) {
-      const details = request.debug ? `\n[DEBUG-VERCEL-LINT] ${JSON.stringify(lint.debug)}` : '';
+      const details = `\n[DEBUG-VERCEL-LINT] ${JSON.stringify(lint.debug)}`;
       throw new Error(`${engine} failed: ${lint.stderr.trim()}${details}`);
     }
     let parsed: unknown;
