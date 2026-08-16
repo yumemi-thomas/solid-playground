@@ -12,7 +12,7 @@
   "scripts": {
     "prepare": "panda codegen",
     "start": "cd packages/playground && pnpm start",
-    "build": "cd packages/playground && pnpm build",
+    "build": "pnpm panda codegen && cd packages/playground && pnpm build",
     "dev": "cd packages/playground && pnpm dev",
     "panda:watch": "panda codegen --watch",
     "format": "oxfmt .",
