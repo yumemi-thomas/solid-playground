@@ -202,6 +202,9 @@ export function runPlaygroundLint(request: LintRequest): LintResult {
     const engine = selectedEngine();
     const lint = runLinter(temporaryDirectory, request.dialect, request.fix, engine);
     if (lint.error) throw lint.error;
+    if (!lint.stdout.trim() && lint.stderr.trim()) {
+      throw new Error(`${engine} failed: ${lint.stderr.trim()}`);
+    }
     let parsed: unknown;
     try {
       parsed = JSON.parse(lint.stdout || '[]');
