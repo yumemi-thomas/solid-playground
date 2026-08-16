@@ -1,4 +1,4 @@
-import { runPlaygroundLint, type Dialect } from '../packages/playground/lint-server';
+import type { Dialect } from '../packages/playground/lint-server';
 
 interface VercelRequest {
   method?: string;
@@ -16,12 +16,13 @@ function requestBody(value: unknown): Record<string, unknown> {
   return {};
 }
 
-export default function handler(request: VercelRequest, response: VercelResponse) {
+export default async function handler(request: VercelRequest, response: VercelResponse) {
   if (request.method !== 'POST') {
     response.status(405).json({ message: 'Only POST is supported.' });
     return;
   }
   try {
+    const { runPlaygroundLint } = await import('../packages/playground/lint-server');
     const body = requestBody(request.body);
     if (typeof body.code !== 'string') {
       response.status(400).json({ message: 'code must be a string' });

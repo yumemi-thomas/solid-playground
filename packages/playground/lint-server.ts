@@ -30,7 +30,7 @@ export interface LintResult {
   fixed: boolean;
 }
 
-const repositoryRoot = resolve(import.meta.dirname, '../..');
+const repositoryRoot = resolve(process.cwd());
 const moduleRoots = [process.cwd(), repositoryRoot].flatMap((root) => [
   resolve(root, 'node_modules'),
   resolve(root, 'packages/playground/node_modules'),
