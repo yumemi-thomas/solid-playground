@@ -16,13 +16,28 @@ importers:
         version: 1.11.5(typescript@6.0.3)
       '@pandacss/eslint-plugin':
         specifier: ^0.3.2
-        version: 0.3.2(eslint@10.2.1)(typescript@6.0.3)
+        version: 0.3.2(eslint@10.8.0)(typescript@6.0.3)
+      '@solidjs/web':
+        specifier: 2.0.0-rc.0
+        version: 2.0.0-rc.0(solid-js@2.0.0-rc.0)
+      '@typescript-eslint/parser':
+        specifier: 8.65.0
+        version: 8.65.0(eslint@10.8.0)(typescript@6.0.3)
+      eslint:
+        specifier: 10.8.0
+        version: 10.8.0
       oxfmt:
         specifier: ^0.60.0
         version: 0.60.0
       oxlint:
         specifier: ^1.75.0
         version: 1.75.0
+      solid-checker:
+        specifier: 0.3.1-beta.2
+        version: 0.3.1-beta.2(eslint@10.8.0)
+      solid-js-v2:
+        specifier: npm:solid-js@2.0.0-rc.0
+        version: solid-js@2.0.0-rc.0
 
   packages/playground:
     dependencies:
@@ -174,6 +189,9 @@ importers:
       dockview-core:
         specifier: ^7.0.4
         version: 7.0.4
+      solid-checker-wasm:
+        specifier: 0.3.1-beta.2
+        version: 0.3.1-beta.2(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
       solid-heroicons:
         specifier: ^3.2.4
         version: 3.2.4(solid-js@1.9.14)
@@ -208,9 +226,6 @@ importers:
       babel-preset-solid:
         specifier: ^1.9.12
         version: 1.9.12(@babel/core@8.0.1)(solid-js@1.9.14)
-      eslint-solid-standalone:
-        specifier: <0.14.0
-        version: 0.13.2(typescript@6.0.3)
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
@@ -749,8 +764,8 @@ packages:
     resolution: {integrity: sha512-Y3kKLvC1dvTOT+oGlqNQ1XLqK6D1HU2YXPc52NmAlJZbMMWDzGYXMiPRJ8TYD39muD/OTjlZmNJ4ib7dvSrMBA==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  '@eslint/config-helpers@0.5.5':
-    resolution: {integrity: sha512-eIJYKTCECbP/nsKaaruF6LW967mtbQbsw4JTtSVkUQc9MneSkbrgPJAbKl9nWr0ZeowV8BfsarBmPpBzGelA2w==}
+  '@eslint/config-helpers@0.7.0':
+    resolution: {integrity: sha512-DObd/KKUsU+FaFv4PLxSRenpXfQWmPXXP3pPZ6/K1PCrMu2vQpMDMuQe/BqYeoLcz8ro0bVDF1RxOJgfVEdhUw==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
   '@eslint/core@1.2.1':
@@ -1525,6 +1540,31 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
+  '@solid-checker/binding-darwin-arm64@0.3.1-beta.2':
+    resolution: {integrity: sha512-XFd6h2thNrXdYZiaJRLem08RGqV6GczGNJXaFIgl4rTabCMZvOOJvF+YRnTM+e7XYGbI7nwynFlxHALnPMO7yw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@solid-checker/binding-darwin-x64@0.3.1-beta.2':
+    resolution: {integrity: sha512-LDdbEep1tomoUILlaeiBWjgg+yn4ZSzqu+kiqrnDlXSI4RvcEBztOY5EsvhADyB61XohQgjhLDQ/++ZrHI8O2A==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@solid-checker/binding-linux-arm64-gnu@0.3.1-beta.2':
+    resolution: {integrity: sha512-eVR99WPYYs+D88O68HZEe4Q7HX6FktkkBFk0chTLW+ux2619rkLu3CePgx5iyL+cRPYELhKUS4qCxRJAilVh/w==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@solid-checker/binding-linux-x64-gnu@0.3.1-beta.2':
+    resolution: {integrity: sha512-wwaWPrbXiDGxd/a33REKSiO/7Krlt7Im9U0NjW7k/SyPYi+CVzdgbUVrogTTitVZoH1W81r2N7W6/UwwjUlbKw==}
+    cpu: [x64]
+    os: [linux]
+
+  '@solid-checker/binding-win32-x64-msvc@0.3.1-beta.2':
+    resolution: {integrity: sha512-cpczhqSYQezjSfIJa9CV2qmvsUWLaVmoxj0L2EZnFm+Dgh+5UYSNcxHjcpsr8gEx01uGagvHGe3FraXFQEc0FQ==}
+    cpu: [x64]
+    os: [win32]
+
   '@solid-primitives/event-listener@2.4.6':
     resolution: {integrity: sha512-5I0YJcTVYIWoMmgBSROBZGcz+ymhew/pGTg2dHW74BUjFKsV8Li4bOZYl0YAGP4mHw5o4UBd9/BEesqBci3wxw==}
     peerDependencies:
@@ -1564,6 +1604,14 @@ packages:
     resolution: {integrity: sha512-pncbV4SGUwGGlELlDWc3B4KDVB0Kt+7+7ct+GTN7D8CgetGSJMzl8RzyAFz+/TtSuFFzp9IzrjrACHUpGzxsKQ==}
     peerDependencies:
       solid-js: ^1.8.6
+
+  '@solidjs/signals@2.0.0-rc.0':
+    resolution: {integrity: sha512-oKZSfvsCcKw1uJjOGbUkJ+OqlhXLHtZ+rShSyu9KH0lUH7UUwfMfsKeh81JPiQxDDg4YLhEwI38hg0JkwzTdvA==}
+
+  '@solidjs/web@2.0.0-rc.0':
+    resolution: {integrity: sha512-pYSaA9+dH8H1h/d/ZF/P2kR6omfzFGNcdzKhWTcg9fJghXhn8+5UrXUr2iYxDdYNOXZzxxFQhYHSJ7P4HKDqgw==}
+    peerDependencies:
+      solid-js: ^2.0.0-rc.0
 
   '@ts-morph/common@0.29.0':
     resolution: {integrity: sha512-35oUmphHbJvQ/+UTwFNme/t2p3FoKiGJ5auTjjpNTop2dyREspirjMy82PLSC1pnDJ8ah1GU98hwpVt64YXQsg==}
@@ -1611,9 +1659,6 @@ packages:
   '@types/dedent@0.7.2':
     resolution: {integrity: sha512-kRiitIeUg1mPV9yH4VUJ/1uk2XjyANfeL8/7rH1tsjvHeO9PJLBHJIYsFWmAvmGj5u8rj+1TZx7PZzW2qLw3Lw==}
 
-  '@types/eslint@8.56.12':
-    resolution: {integrity: sha512-03ruubjWyOHlmljCVoxSuNDdmfZDzsrrz0P2LeJsOXr+ZwFQ+0yQIwNCwt/GYhV7Z31fgtXJTAEs+FYlEL851g==}
-
   '@types/esrecurse@4.3.1':
     resolution: {integrity: sha512-xJBAbDifo5hpffDBuHl0Y8ywswbiAp/Wi7Y/GtAgSlZyIABppyurxVueOPE8LUQOxdlgi6Zqce7uoEpqNTeiUw==}
 
@@ -1634,6 +1679,13 @@ packages:
 
   '@types/node@17.0.45':
     resolution: {integrity: sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==}
+
+  '@typescript-eslint/parser@8.65.0':
+    resolution: {integrity: sha512-CZ4nMxWwgu1HEEFNkeaCptra9QCtkmKdgf3sWh1rl1trIhmxLilgTV4cwcbQ4wemnT4sWQN8CaKOmdYx+g2gMA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
+      typescript: '>=4.8.4 <6.1.0'
 
   '@typescript-eslint/project-service@8.65.0':
     resolution: {integrity: sha512-SxnPhbTsGahizDgbu7oqFH/xVtzIqMd/s+WtnSxNxJZJpLbdT5IPdzg8EZxO3+PoKahXmwJLeNQOpKJb3/bi7Q==}
@@ -2219,11 +2271,6 @@ packages:
     resolution: {integrity: sha512-xS90H51cKw0jltxmvmHy2Iai1LIqrfbw57b79w/J7MfvDfkIkFZ+kj6zC3BjtUwh150HsSSdxXZcsuv72miDFQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  eslint-solid-standalone@0.13.2:
-    resolution: {integrity: sha512-tMJhN4zmpQrZRicokZq95NY/p7pDAY2Gs1CLK/gA5CBO1Rb017tk9N7qwLFOtlSFyFHjBZQvSQolbeQpBk0A1Q==}
-    peerDependencies:
-      typescript: '>=4.0.0'
-
   eslint-visitor-keys@3.4.3:
     resolution: {integrity: sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -2232,8 +2279,8 @@ packages:
     resolution: {integrity: sha512-tD40eHxA35h0PEIZNeIjkHoDR4YjjJp34biM0mDvplBe//mB+IHCqHDGV7pxF+7MklTvighcCPPZC7ynWyjdTA==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  eslint@10.2.1:
-    resolution: {integrity: sha512-wiyGaKsDgqXvF40P8mDwiUp/KQjE1FdrIEJsM8PZ3XCiniTMXS3OHWWUe5FI5agoCnr8x4xPrTDZuxsBlNHl+Q==}
+  eslint@10.8.0:
+    resolution: {integrity: sha512-nuKKvN+oIBO0koN7Tm7dlkmnkc21mtt0QJLwAKzjLq14y6lRTdVG36MZHJ8eQHwdJMwZbQNMlPOYedMq/oVJvQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
     hasBin: true
     peerDependencies:
@@ -3328,6 +3375,20 @@ packages:
     resolution: {integrity: sha512-qMCMfhY040cVHT43K9BFygqYbUPFZKHOg7K73mtTWJRb8pyP3fzf4Ixd5SzdEJQ6MRUg/WBnOLxghZtKKurENQ==}
     engines: {node: '>=10'}
 
+  solid-checker-wasm@0.3.1-beta.2:
+    resolution: {integrity: sha512-LozHSRLnfANA3JSGOkV9QV3Ew5TnT4NY3roIvkZplk1pamExrNd0NtVTaBGO8cFuW/j/gc6MbDxaZ72aZPeVEw==}
+    engines: {node: '>=20'}
+
+  solid-checker@0.3.1-beta.2:
+    resolution: {integrity: sha512-VRmk6rPoy7YazIg1yga4hNmvPc/9Dd7cxlylv2sWfDH5+3PiP4JlfJ4/xPLsAHQBlljcVjr/YQYRyiWs722JAQ==}
+    engines: {node: '>=20'}
+    hasBin: true
+    peerDependencies:
+      eslint: '>=9.0.0'
+    peerDependenciesMeta:
+      eslint:
+        optional: true
+
   solid-heroicons@3.2.4:
     resolution: {integrity: sha512-u6BMdFLvkJnvUGYzdFcWp1wvJ4hb9Y1zd3AbZ9D3bUmmiy9jBzNZX+RcqBCI2EKRvdQwAb1UB9bkESfqfhayDg==}
     peerDependencies:
@@ -3335,6 +3396,9 @@ packages:
 
   solid-js@1.9.14:
     resolution: {integrity: sha512-sAEXC0Kk0S1EDg+8ysEWJDbYhA3RRoEjwuySUGlKIemeo0I5YZfOyumNjNs9Sv3y2nmhD+0rW66ag2HsMuQiGQ==}
+
+  solid-js@2.0.0-rc.0:
+    resolution: {integrity: sha512-3enTJ71VL69nM5p/it2InVBDBt316Cqfij+F0S7VuHZLITc8YV7Rvavjoy52nAKKxYWXM+BcXh2K7KcLTf1zdQ==}
 
   solid-refresh@0.6.3:
     resolution: {integrity: sha512-F3aPsX6hVw9ttm5LYlth8Q15x6MlI/J3Dn+o3EQyRTtTxidepSTwAYdozt01/YA+7ObcciagGEyXIopGZzQtbA==}
@@ -4198,7 +4262,6 @@ snapshots:
     dependencies:
       '@emnapi/wasi-threads': 1.2.2
       tslib: 2.8.1
-    optional: true
 
   '@emnapi/runtime@1.10.0':
     dependencies:
@@ -4213,7 +4276,6 @@ snapshots:
   '@emnapi/runtime@1.11.2':
     dependencies:
       tslib: 2.8.1
-    optional: true
 
   '@emnapi/wasi-threads@1.2.1':
     dependencies:
@@ -4223,7 +4285,6 @@ snapshots:
   '@emnapi/wasi-threads@1.2.2':
     dependencies:
       tslib: 2.8.1
-    optional: true
 
   '@esbuild/aix-ppc64@0.25.12':
     optional: true
@@ -4303,9 +4364,9 @@ snapshots:
   '@esbuild/win32-x64@0.25.12':
     optional: true
 
-  '@eslint-community/eslint-utils@4.10.1(eslint@10.2.1)':
+  '@eslint-community/eslint-utils@4.10.1(eslint@10.8.0)':
     dependencies:
-      eslint: 10.2.1
+      eslint: 10.8.0
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.2': {}
@@ -4318,7 +4379,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@eslint/config-helpers@0.5.5':
+  '@eslint/config-helpers@0.7.0':
     dependencies:
       '@eslint/core': 1.2.1
 
@@ -4450,6 +4511,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@napi-rs/wasm-runtime@1.1.6':
+    dependencies:
+      '@tybys/wasm-util': 0.10.3
+
   '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
       '@emnapi/core': 1.10.0
@@ -4469,7 +4534,6 @@ snapshots:
       '@emnapi/core': 1.11.2
       '@emnapi/runtime': 1.11.2
       '@tybys/wasm-util': 0.10.3
-    optional: true
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -4657,15 +4721,15 @@ snapshots:
       - supports-color
       - typescript
 
-  '@pandacss/eslint-plugin@0.3.2(eslint@10.2.1)(typescript@6.0.3)':
+  '@pandacss/eslint-plugin@0.3.2(eslint@10.8.0)(typescript@6.0.3)':
     dependencies:
       '@pandacss/config': 1.11.5
       '@pandacss/generator': 1.11.5
       '@pandacss/node': 1.11.5(typescript@6.0.3)
       '@pandacss/shared': 1.11.5
       '@typescript-eslint/scope-manager': 8.65.0
-      '@typescript-eslint/utils': 8.65.0(eslint@10.2.1)(typescript@6.0.3)
-      eslint: 10.2.1
+      '@typescript-eslint/utils': 8.65.0(eslint@10.8.0)(typescript@6.0.3)
+      eslint: 10.8.0
       hookable: 5.5.3
       micromatch: 4.0.8
       synckit: 0.9.3
@@ -4995,6 +5059,21 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
+  '@solid-checker/binding-darwin-arm64@0.3.1-beta.2':
+    optional: true
+
+  '@solid-checker/binding-darwin-x64@0.3.1-beta.2':
+    optional: true
+
+  '@solid-checker/binding-linux-arm64-gnu@0.3.1-beta.2':
+    optional: true
+
+  '@solid-checker/binding-linux-x64-gnu@0.3.1-beta.2':
+    optional: true
+
+  '@solid-checker/binding-win32-x64-msvc@0.3.1-beta.2':
+    optional: true
+
   '@solid-primitives/event-listener@2.4.6(solid-js@1.9.14)':
     dependencies:
       '@solid-primitives/utils': 6.4.1(solid-js@1.9.14)
@@ -5034,6 +5113,14 @@ snapshots:
     dependencies:
       solid-js: 1.9.14
 
+  '@solidjs/signals@2.0.0-rc.0': {}
+
+  '@solidjs/web@2.0.0-rc.0(solid-js@2.0.0-rc.0)':
+    dependencies:
+      seroval: 1.5.6
+      seroval-plugins: 1.5.6(seroval@1.5.6)
+      solid-js: 2.0.0-rc.0
+
   '@ts-morph/common@0.29.0':
     dependencies:
       minimatch: 10.2.5
@@ -5056,7 +5143,6 @@ snapshots:
   '@tybys/wasm-util@0.10.3':
     dependencies:
       tslib: 2.8.1
-    optional: true
 
   '@types/babel__core@7.20.5':
     dependencies:
@@ -5090,11 +5176,6 @@ snapshots:
 
   '@types/dedent@0.7.2': {}
 
-  '@types/eslint@8.56.12':
-    dependencies:
-      '@types/estree': 1.0.9
-      '@types/json-schema': 7.0.15
-
   '@types/esrecurse@4.3.1': {}
 
   '@types/estree@1.0.9': {}
@@ -5108,6 +5189,18 @@ snapshots:
   '@types/node@12.20.55': {}
 
   '@types/node@17.0.45': {}
+
+  '@typescript-eslint/parser@8.65.0(eslint@10.8.0)(typescript@6.0.3)':
+    dependencies:
+      '@typescript-eslint/scope-manager': 8.65.0
+      '@typescript-eslint/types': 8.65.0
+      '@typescript-eslint/typescript-estree': 8.65.0(typescript@6.0.3)
+      '@typescript-eslint/visitor-keys': 8.65.0
+      debug: 4.4.3
+      eslint: 10.8.0
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
 
   '@typescript-eslint/project-service@8.65.0(typescript@6.0.3)':
     dependencies:
@@ -5144,13 +5237,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.65.0(eslint@10.2.1)(typescript@6.0.3)':
+  '@typescript-eslint/utils@8.65.0(eslint@10.8.0)(typescript@6.0.3)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.2.1)
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.0)
       '@typescript-eslint/scope-manager': 8.65.0
       '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/typescript-estree': 8.65.0(typescript@6.0.3)
-      eslint: 10.2.1
+      eslint: 10.8.0
       typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
@@ -5724,21 +5817,16 @@ snapshots:
       esrecurse: 4.3.0
       estraverse: 5.3.0
 
-  eslint-solid-standalone@0.13.2(typescript@6.0.3):
-    dependencies:
-      '@types/eslint': 8.56.12
-      typescript: 6.0.3
-
   eslint-visitor-keys@3.4.3: {}
 
   eslint-visitor-keys@5.0.1: {}
 
-  eslint@10.2.1:
+  eslint@10.8.0:
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.2.1)
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.0)
       '@eslint-community/regexpp': 4.12.2
       '@eslint/config-array': 0.23.5
-      '@eslint/config-helpers': 0.5.5
+      '@eslint/config-helpers': 0.7.0
       '@eslint/core': 1.2.1
       '@eslint/plugin-kit': 0.7.2
       '@humanfs/node': 0.16.8
@@ -6811,12 +6899,47 @@ snapshots:
       astral-regex: 2.0.0
       is-fullwidth-code-point: 3.0.0
 
+  solid-checker-wasm@0.3.1-beta.2:
+    dependencies:
+      '@napi-rs/wasm-runtime': 1.1.6
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+
+  solid-checker-wasm@0.3.1-beta.2(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2):
+    dependencies:
+      '@napi-rs/wasm-runtime': 1.1.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+
+  solid-checker@0.3.1-beta.2(eslint@10.8.0):
+    dependencies:
+      solid-checker-wasm: 0.3.1-beta.2
+    optionalDependencies:
+      '@solid-checker/binding-darwin-arm64': 0.3.1-beta.2
+      '@solid-checker/binding-darwin-x64': 0.3.1-beta.2
+      '@solid-checker/binding-linux-arm64-gnu': 0.3.1-beta.2
+      '@solid-checker/binding-linux-x64-gnu': 0.3.1-beta.2
+      '@solid-checker/binding-win32-x64-msvc': 0.3.1-beta.2
+      eslint: 10.8.0
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+
   solid-heroicons@3.2.4(solid-js@1.9.14):
     dependencies:
       solid-js: 1.9.14
 
   solid-js@1.9.14:
     dependencies:
+      csstype: 3.2.3
+      seroval: 1.5.6
+      seroval-plugins: 1.5.6(seroval@1.5.6)
+
+  solid-js@2.0.0-rc.0:
+    dependencies:
+      '@solidjs/signals': 2.0.0-rc.0
       csstype: 3.2.3
       seroval: 1.5.6
       seroval-plugins: 1.5.6(seroval@1.5.6)

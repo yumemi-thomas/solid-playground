@@ -13,6 +13,7 @@ import { Header } from '../components/header';
 import { Button } from 'solid-repl/src/components/ui/Button';
 import { useDialog } from 'solid-repl/src/components/ui/Dialog';
 import { css } from 'styled-system/css';
+import { normalizeSolidVersion } from '../solidVersion';
 
 function parseHash<T>(hash: string, fallback: T): T {
   try {
@@ -138,29 +139,9 @@ export const Edit = () => {
   const [tabs, trueSetTabs] = createSignal<InternalTab[]>([]);
   const setTabs = (tabs: (Tab | InternalTab)[]) => trueSetTabs(mapTabs(tabs));
 
-  const storedVersion = localStorage.getItem('solidVersion') ?? '';
+  const storedVersion = normalizeSolidVersion(localStorage.getItem('solidVersion'));
   const [solidVersion, setSolidVersion] = createSignal(storedVersion);
-  const [resolvedSolidVersion, setResolvedSolidVersion] = createSignal(
-    storedVersion === 'next' || storedVersion === 'latest'
-      ? (localStorage.getItem(`solidVersion:${storedVersion}`) ?? '')
-      : storedVersion,
-  );
-
-  const resolveSolidVersion = async (stored: string): Promise<string> => {
-    if (stored !== 'next' && stored !== 'latest') return stored;
-    const cacheKey = `solidVersion:${stored}`;
-    try {
-      const res = await fetch('https://data.jsdelivr.com/v1/package/npm/solid-js');
-      const { tags } = (await res.json()) as { tags: Record<string, string> };
-      if (tags[stored]) {
-        localStorage.setItem(cacheKey, tags[stored]);
-        return tags[stored];
-      }
-    } catch (e) {
-      console.error('Failed to resolve solid-js version tag', e);
-    }
-    return localStorage.getItem(cacheKey) ?? '';
-  };
+  const [resolvedSolidVersion, setResolvedSolidVersion] = createSignal(storedVersion);
 
   const migrateTabs = (version: string | undefined) => {
     const isV2 = isSolidV2(version);
@@ -179,20 +160,12 @@ export const Edit = () => {
     if (changed) trueSetTabs(current.slice());
   };
 
-  let versionRequest = 0;
-  const applySolidVersion = async (version: string, migrate: boolean) => {
-    const request = ++versionRequest;
-    const resolved = await resolveSolidVersion(version);
-    if (request !== versionRequest) return;
-    setResolvedSolidVersion(resolved);
-    if (migrate) migrateTabs(resolved || undefined);
-  };
-  if (storedVersion === 'next' || storedVersion === 'latest') applySolidVersion(storedVersion, false);
-
   const changeSolidVersion = (version: string) => {
-    setSolidVersion(version);
-    localStorage.setItem('solidVersion', version);
-    applySolidVersion(version, true);
+    const selected = normalizeSolidVersion(version);
+    setSolidVersion(selected);
+    setResolvedSolidVersion(selected);
+    localStorage.setItem('solidVersion', selected);
+    migrateTabs(selected);
   };
 
   context.setTabs(tabs);

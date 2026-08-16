@@ -2,10 +2,15 @@
   <img width="100%" src="https://assets.solidjs.com/banner?project=Playground&type=core" alt="Solid Playground">
 </p>
 
-# Solid Template Explorer
+# Solid Playground with Solid Checker
 
 This is the source code of the [solid playground](https://playground.solidjs.com) website.
-Through it you can quickly discover what the solid compiler will generate from your JSX templates.
+Through it you can quickly discover what the Solid compiler will generate from your JSX templates and see Solid Checker diagnostics while editing.
+
+This checkout keeps the upstream Solid Playground UI and replaces its in-browser
+Solid linting with a Vite dev-server boundary. The boundary runs the published
+`solid-checker@0.3.1-beta.2` adapter through ESLint or Oxlint; it does not load
+`eslint-plugin-solid` or `eslint-solid-standalone`. Oxlint is the preferred mode.
 
 There are 3 modes available:
 
@@ -27,12 +32,31 @@ $ git clone https://github.com/solidjs/solid-playground
 # cd into the project and install the dependencies
 $ cd solid-playground && pnpm i
 
-# Start the dev server, the address is available at http://localhost:5173
+# Start the dev server (preferred Oxlint adapter)
 $ pnpm run dev
+
+# Optional: run the same checker adapter through ESLint
+$ SOLID_PLAYGROUND_LINTER=eslint pnpm run dev
 
 # Build the project
 $ pnpm run build
 ```
+
+The Solid version menu defaults to Solid `2.0` (currently pinned to the
+published `2.0.0-rc.0` package) and only offers Solid `2.0` and `1.9.4`. The
+linter request turns that selection into an explicit
+`solid-v1` or `solid-v2` checker dialect.
+The browser worker also bundles `solid-checker-wasm@0.3.1-beta.2` as a fallback.
+Because the WASM runtime uses shared memory, the Vite config sends
+`Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp` headers, following the pattern used
+by the [Oxc Playground](https://github.com/oxc-project/playground).
+
+The repository includes a `vercel.json` configuration. Vercel builds the
+workspace with `pnpm build`, serves `packages/playground/dist`, preserves the
+SPA routes, and sends the cross-origin isolation headers required by the browser
+WASM fallback. The static deployment intentionally falls back from the local
+Vite lint endpoint to `solid-checker-wasm` in the browser.
 
 ## Credits / Technologies used
 

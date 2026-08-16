@@ -30,7 +30,8 @@ export interface CodemirrorTabsOptions {
   isDark: () => boolean;
   fontSize: () => number;
   displayErrors: () => boolean;
-  eslintEnabled: () => boolean;
+  lintEnabled: () => boolean;
+  lintVersion?: () => string | undefined;
   formatter?: WorkerClient;
   linter?: WorkerClient;
   keyBindings?: KeyBinding[];
@@ -157,7 +158,6 @@ const markersToDiagnostics = (view: EditorView, markers: LintMarker[]): Diagnost
       to: Math.max(from, to),
       severity: m.severity === 8 ? 'error' : 'warning',
       message: m.message,
-      source: 'eslint',
     };
   });
 };
@@ -184,8 +184,11 @@ const buildLintExtension = (
         session.client.sync();
         diagnostics.push(...(await session.getDiagnostics(uri, view)));
       }
-      if (isTs && opts.eslintEnabled()) {
-        const res = await opts.linter?.tryRequest<LintResponse>('LINT', { code: view.state.doc.toString() });
+      if (isTs && opts.lintEnabled()) {
+        const res = await opts.linter?.tryRequest<LintResponse>('LINT', {
+          code: view.state.doc.toString(),
+          version: opts.lintVersion?.(),
+        });
         diagnostics.push(...markersToDiagnostics(view, res?.markers ?? []));
       }
       return diagnostics;
@@ -215,8 +218,11 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
   };
 
   const fixView = async (view: EditorView) => {
-    if (!opts.displayErrors() || !opts.eslintEnabled()) return;
-    const res = await opts.linter?.tryRequest<LintResponse>('FIX', { code: view.state.doc.toString() });
+    if (!opts.displayErrors() || !opts.lintEnabled()) return;
+    const res = await opts.linter?.tryRequest<LintResponse>('FIX', {
+      code: view.state.doc.toString(),
+      version: opts.lintVersion?.(),
+    });
     if (res?.fixed && typeof res.output === 'string') replaceDoc(view, res.output);
   };
 
@@ -400,7 +406,8 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
 
   createEffect(() => {
     opts.displayErrors();
-    opts.eslintEnabled();
+    opts.lintEnabled();
+    opts.lintVersion?.();
     for (const lookup of lookups.values()) {
       lookup.view.dispatch({ effects: relintRequested.of(null) });
     }
