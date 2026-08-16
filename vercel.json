@@ -5,10 +5,10 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "packages/playground/dist",
   "functions": {
-    "api/**/*.ts": { "maxDuration": 60 }
+    "api/*.ts": { "maxDuration": 60 }
   },
   "rewrites": [
-    { "source": "/__solid-playground/lint", "destination": "/api/__solid-playground/lint" },
+    { "source": "/__solid-playground/lint", "destination": "/api/solid-playground-lint" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [

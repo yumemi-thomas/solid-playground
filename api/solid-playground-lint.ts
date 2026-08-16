@@ -1,4 +1,4 @@
-import { runPlaygroundLint, type Dialect } from '../../packages/playground/lint-server';
+import { runPlaygroundLint, type Dialect } from '../packages/playground/lint-server';
 
 interface VercelRequest {
   method?: string;
