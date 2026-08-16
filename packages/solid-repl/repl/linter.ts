@@ -36,6 +36,15 @@ interface ServerResponse {
   message?: string;
 }
 
+function isServerResponse(value: unknown): value is ServerResponse {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    typeof (value as ServerResponse).engine === 'string' &&
+    Array.isArray((value as ServerResponse).diagnostics)
+  );
+}
+
 const lintEndpoint = '/__solid-playground/lint';
 
 const dialectFor = (payload: LinterWorkerPayload): Dialect =>
@@ -57,7 +66,10 @@ function byteOffsetToIndex(source: string, byteOffset: number) {
   return Math.min(source.length, new TextDecoder().decode(bytes.slice(0, byteOffset)).length);
 }
 
-function wasmFindingMarkers(source: string, findings: Array<{ id?: string; message?: string; primaryLocation?: { startByte?: number; endByte?: number } }>) {
+function wasmFindingMarkers(
+  source: string,
+  findings: Array<{ id?: string; message?: string; primaryLocation?: { startByte?: number; endByte?: number } }>,
+) {
   return findings.map((finding) => {
     const start = byteOffsetToIndex(source, finding.primaryLocation?.startByte ?? 0);
     const end = byteOffsetToIndex(source, finding.primaryLocation?.endByte ?? start + 1);
@@ -83,34 +95,40 @@ async function lintWithWasm(payload: LinterWorkerPayload): Promise<ServerRespons
   const sourcePath = '/solid-playground/src/Playground.tsx';
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload.code));
   const sha256 = `sha256:${Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')}`;
-  const snapshot = JSON.parse(checkSync(JSON.stringify({
-    projectId,
-    dialect: dialectFor(payload),
-    generation: 1,
-    sources: [{
-      path: sourcePath,
-      source: payload.code,
-      compilerOptions: {
-        moduleName: 'dom',
-        generate: 'dom',
-        hydratable: false,
-        dev: false,
-        effectWrapper: '',
-        wrapConditionals: true,
-        staticMarker: '_$',
-        builtIns: [],
-      },
-    }],
-    typeFacts: {
-      schema: 2,
-      generation: 1,
-      projectId,
-      sources: [{ path: sourcePath, sha256 }],
-      entities: [],
-      symbols: [],
-      files: [],
-    },
-  })));
+  const snapshot = JSON.parse(
+    checkSync(
+      JSON.stringify({
+        projectId,
+        dialect: dialectFor(payload),
+        generation: 1,
+        sources: [
+          {
+            path: sourcePath,
+            source: payload.code,
+            compilerOptions: {
+              moduleName: 'dom',
+              generate: 'dom',
+              hydratable: false,
+              dev: false,
+              effectWrapper: '',
+              wrapConditionals: true,
+              staticMarker: '_$',
+              builtIns: [],
+            },
+          },
+        ],
+        typeFacts: {
+          schema: 2,
+          generation: 1,
+          projectId,
+          sources: [{ path: sourcePath, sha256 }],
+          entities: [],
+          symbols: [],
+          files: [],
+        },
+      }),
+    ),
+  );
   const findings = Array.isArray(snapshot.findings) ? snapshot.findings : [];
   return {
     engine: 'wasm',
@@ -125,8 +143,24 @@ async function lint(payload: LinterWorkerPayload, fix: boolean) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: payload.code, dialect: dialectFor(payload), fix }),
     });
-    const result = (await response.json().catch(() => ({}))) as ServerResponse;
-    if (!response.ok) throw new Error(result.message ?? `Linter server returned ${response.status}`);
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!contentType.toLowerCase().includes('application/json')) {
+      throw new Error(`Linter endpoint returned ${contentType || 'a non-JSON response'} (${response.status}).`);
+    }
+    let result: unknown;
+    try {
+      result = await response.json();
+    } catch {
+      throw new Error(`Linter endpoint returned invalid JSON (${response.status}).`);
+    }
+    if (!response.ok) {
+      const message =
+        result && typeof result === 'object' && typeof (result as ServerResponse).message === 'string'
+          ? (result as ServerResponse).message
+          : `Linter server returned ${response.status}`;
+      throw new Error(message);
+    }
+    if (!isServerResponse(result)) throw new Error('Linter endpoint returned an invalid result.');
     return result;
   } catch (error) {
     if (fix) throw error;
@@ -138,7 +172,10 @@ serveWorker({
   LINT: async (payload: LinterWorkerPayload) => {
     const result = await lint(payload, false);
     return {
-      markers: result.engine === 'wasm' ? result.diagnostics ?? [] : diagnosticsToMarkers(result.diagnostics ?? [], result.engine ?? 'eslint'),
+      markers:
+        result.engine === 'wasm'
+          ? (result.diagnostics ?? [])
+          : diagnosticsToMarkers(result.diagnostics ?? [], result.engine ?? 'eslint'),
     };
   },
   FIX: async (payload: LinterWorkerPayload) => {
