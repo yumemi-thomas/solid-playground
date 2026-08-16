@@ -172,14 +172,16 @@ function runLinter(temporaryDirectory: string, dialect: Dialect, fix: boolean, e
     resolve(temporaryDirectory, configName),
     '--format',
     'json',
-    ...(engine === 'oxlint' ? ['--threads', '1'] : []),
+    ...(engine === 'oxlint' ? ['--threads=1'] : []),
     ...(fix ? ['--fix'] : []),
     'src/Playground.tsx',
   ];
   return spawnSync(process.execPath, [executable, ...args], {
     cwd: temporaryDirectory,
     encoding: 'utf8',
-    env: process.env,
+    env: engine === 'oxlint'
+      ? { ...process.env, RAYON_NUM_THREADS: '1', UV_THREADPOOL_SIZE: '1' }
+      : process.env,
   });
 }
 
