@@ -11,18 +11,12 @@ importers:
       '@solidjs/web':
         specifier: 2.0.0-rc.0
         version: 2.0.0-rc.0(solid-js@2.0.0-rc.0)
-      '@typescript-eslint/parser':
-        specifier: 8.65.0
-        version: 8.65.0(eslint@10.8.0)(typescript@6.0.3)
-      eslint:
-        specifier: 10.8.0
-        version: 10.8.0
       oxlint:
         specifier: ^1.75.0
         version: 1.75.0
       solid-checker:
-        specifier: 0.3.1-beta.2
-        version: 0.3.1-beta.2(eslint@10.8.0)
+        specifier: 0.3.1-beta.3
+        version: 0.3.1-beta.3(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(eslint@10.8.0)
       solid-js-v2:
         specifier: npm:solid-js@2.0.0-rc.0
         version: solid-js@2.0.0-rc.0
@@ -1544,28 +1538,28 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@solid-checker/binding-darwin-arm64@0.3.1-beta.2':
-    resolution: {integrity: sha512-XFd6h2thNrXdYZiaJRLem08RGqV6GczGNJXaFIgl4rTabCMZvOOJvF+YRnTM+e7XYGbI7nwynFlxHALnPMO7yw==}
+  '@solid-checker/binding-darwin-arm64@0.3.1-beta.3':
+    resolution: {integrity: sha512-gdKooIg489fDVPwmP68bDp3tkDPXujNJWnhewVcZgQOKR/0OnGd8XJuer+cgKxJkrHx41s4pfdB6vuHsu16d2Q==}
     cpu: [arm64]
     os: [darwin]
 
-  '@solid-checker/binding-darwin-x64@0.3.1-beta.2':
-    resolution: {integrity: sha512-LDdbEep1tomoUILlaeiBWjgg+yn4ZSzqu+kiqrnDlXSI4RvcEBztOY5EsvhADyB61XohQgjhLDQ/++ZrHI8O2A==}
+  '@solid-checker/binding-darwin-x64@0.3.1-beta.3':
+    resolution: {integrity: sha512-aKJnXjr/hKt6pE+o4BgU1dYiTjQJkb8bqacBaGIR3JhumECWBR/sSbpWftuMDtiJnhT5OIumzssq1GE4OQRpOg==}
     cpu: [x64]
     os: [darwin]
 
-  '@solid-checker/binding-linux-arm64-gnu@0.3.1-beta.2':
-    resolution: {integrity: sha512-eVR99WPYYs+D88O68HZEe4Q7HX6FktkkBFk0chTLW+ux2619rkLu3CePgx5iyL+cRPYELhKUS4qCxRJAilVh/w==}
+  '@solid-checker/binding-linux-arm64-gnu@0.3.1-beta.3':
+    resolution: {integrity: sha512-mE3OmZOX5akl2mvkjCCgItd3sUrR3+gVM22WmJFflBDCkQdVOd+czS1OX4Lg11EXu7/68RTSzy1wdiL1KLlcPA==}
     cpu: [arm64]
     os: [linux]
 
-  '@solid-checker/binding-linux-x64-gnu@0.3.1-beta.2':
-    resolution: {integrity: sha512-wwaWPrbXiDGxd/a33REKSiO/7Krlt7Im9U0NjW7k/SyPYi+CVzdgbUVrogTTitVZoH1W81r2N7W6/UwwjUlbKw==}
+  '@solid-checker/binding-linux-x64-gnu@0.3.1-beta.3':
+    resolution: {integrity: sha512-rUNcad/D1VeNw1Uc5mV1k3WJNsiu/BEDdk2bwjrhtb+GWwy6127/6nvpA9WlJt9CY3WOBk908LG7AvKtTQ6+Yg==}
     cpu: [x64]
     os: [linux]
 
-  '@solid-checker/binding-win32-x64-msvc@0.3.1-beta.2':
-    resolution: {integrity: sha512-cpczhqSYQezjSfIJa9CV2qmvsUWLaVmoxj0L2EZnFm+Dgh+5UYSNcxHjcpsr8gEx01uGagvHGe3FraXFQEc0FQ==}
+  '@solid-checker/binding-win32-x64-msvc@0.3.1-beta.3':
+    resolution: {integrity: sha512-EiMuOjrVVhBz78GntitBfzFzQj/fBq7S4zIf24+DRiq9dzgNFEuRWWqpbJqRm++GREa6cXarYhNMLI+TPhYW5A==}
     cpu: [x64]
     os: [win32]
 
@@ -1686,13 +1680,6 @@ packages:
 
   '@types/node@22.20.1':
     resolution: {integrity: sha512-EANqOCF9QFyra+4pfxUcX9STKJpCLjMbObVzljIJomAWSnuSIEAvyzEU53GaajbXJEgdh0iEcPL+DGvpUd4k1Q==}
-
-  '@typescript-eslint/parser@8.65.0':
-    resolution: {integrity: sha512-CZ4nMxWwgu1HEEFNkeaCptra9QCtkmKdgf3sWh1rl1trIhmxLilgTV4cwcbQ4wemnT4sWQN8CaKOmdYx+g2gMA==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
-      typescript: '>=4.8.4 <6.1.0'
 
   '@typescript-eslint/project-service@8.65.0':
     resolution: {integrity: sha512-SxnPhbTsGahizDgbu7oqFH/xVtzIqMd/s+WtnSxNxJZJpLbdT5IPdzg8EZxO3+PoKahXmwJLeNQOpKJb3/bi7Q==}
@@ -3386,8 +3373,12 @@ packages:
     resolution: {integrity: sha512-LozHSRLnfANA3JSGOkV9QV3Ew5TnT4NY3roIvkZplk1pamExrNd0NtVTaBGO8cFuW/j/gc6MbDxaZ72aZPeVEw==}
     engines: {node: '>=20'}
 
-  solid-checker@0.3.1-beta.2:
-    resolution: {integrity: sha512-VRmk6rPoy7YazIg1yga4hNmvPc/9Dd7cxlylv2sWfDH5+3PiP4JlfJ4/xPLsAHQBlljcVjr/YQYRyiWs722JAQ==}
+  solid-checker-wasm@0.3.1-beta.3:
+    resolution: {integrity: sha512-XbE/XZPMOvca8ZXD94+qsjFUh423BNcPlcBgVcnEO4zee/VrwPFRIYs6eouUxF3LSHHyJPNEnzjbF06S/tJ3EA==}
+    engines: {node: '>=20'}
+
+  solid-checker@0.3.1-beta.3:
+    resolution: {integrity: sha512-kJdygv/cuTRZsb0LOYnFWnYrfV9tyjDPT7O58p25gzfj2xzrjokUBtiqLJmUAHsM/i0oC7FY/YSAdXO4TM+suA==}
     engines: {node: '>=20'}
     hasBin: true
     peerDependencies:
@@ -4523,10 +4514,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@napi-rs/wasm-runtime@1.1.6':
-    dependencies:
-      '@tybys/wasm-util': 0.10.3
-
   '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
       '@emnapi/core': 1.10.0
@@ -5071,19 +5058,19 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@solid-checker/binding-darwin-arm64@0.3.1-beta.2':
+  '@solid-checker/binding-darwin-arm64@0.3.1-beta.3':
     optional: true
 
-  '@solid-checker/binding-darwin-x64@0.3.1-beta.2':
+  '@solid-checker/binding-darwin-x64@0.3.1-beta.3':
     optional: true
 
-  '@solid-checker/binding-linux-arm64-gnu@0.3.1-beta.2':
+  '@solid-checker/binding-linux-arm64-gnu@0.3.1-beta.3':
     optional: true
 
-  '@solid-checker/binding-linux-x64-gnu@0.3.1-beta.2':
+  '@solid-checker/binding-linux-x64-gnu@0.3.1-beta.3':
     optional: true
 
-  '@solid-checker/binding-win32-x64-msvc@0.3.1-beta.2':
+  '@solid-checker/binding-win32-x64-msvc@0.3.1-beta.3':
     optional: true
 
   '@solid-primitives/event-listener@2.4.6(solid-js@1.9.14)':
@@ -5205,18 +5192,6 @@ snapshots:
   '@types/node@22.20.1':
     dependencies:
       undici-types: 6.21.0
-
-  '@typescript-eslint/parser@8.65.0(eslint@10.8.0)(typescript@6.0.3)':
-    dependencies:
-      '@typescript-eslint/scope-manager': 8.65.0
-      '@typescript-eslint/types': 8.65.0
-      '@typescript-eslint/typescript-estree': 8.65.0(typescript@6.0.3)
-      '@typescript-eslint/visitor-keys': 8.65.0
-      debug: 4.4.3
-      eslint: 10.8.0
-      typescript: 6.0.3
-    transitivePeerDependencies:
-      - supports-color
 
   '@typescript-eslint/project-service@8.65.0(typescript@6.0.3)':
     dependencies:
@@ -6915,13 +6890,6 @@ snapshots:
       astral-regex: 2.0.0
       is-fullwidth-code-point: 3.0.0
 
-  solid-checker-wasm@0.3.1-beta.2:
-    dependencies:
-      '@napi-rs/wasm-runtime': 1.1.6
-    transitivePeerDependencies:
-      - '@emnapi/core'
-      - '@emnapi/runtime'
-
   solid-checker-wasm@0.3.1-beta.2(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2):
     dependencies:
       '@napi-rs/wasm-runtime': 1.1.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
@@ -6929,15 +6897,22 @@ snapshots:
       - '@emnapi/core'
       - '@emnapi/runtime'
 
-  solid-checker@0.3.1-beta.2(eslint@10.8.0):
+  solid-checker-wasm@0.3.1-beta.3(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2):
     dependencies:
-      solid-checker-wasm: 0.3.1-beta.2
+      '@napi-rs/wasm-runtime': 1.1.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+
+  solid-checker@0.3.1-beta.3(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(eslint@10.8.0):
+    dependencies:
+      solid-checker-wasm: 0.3.1-beta.3(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
     optionalDependencies:
-      '@solid-checker/binding-darwin-arm64': 0.3.1-beta.2
-      '@solid-checker/binding-darwin-x64': 0.3.1-beta.2
-      '@solid-checker/binding-linux-arm64-gnu': 0.3.1-beta.2
-      '@solid-checker/binding-linux-x64-gnu': 0.3.1-beta.2
-      '@solid-checker/binding-win32-x64-msvc': 0.3.1-beta.2
+      '@solid-checker/binding-darwin-arm64': 0.3.1-beta.3
+      '@solid-checker/binding-darwin-x64': 0.3.1-beta.3
+      '@solid-checker/binding-linux-arm64-gnu': 0.3.1-beta.3
+      '@solid-checker/binding-linux-x64-gnu': 0.3.1-beta.3
+      '@solid-checker/binding-win32-x64-msvc': 0.3.1-beta.3
       eslint: 10.8.0
     transitivePeerDependencies:
       - '@emnapi/core'

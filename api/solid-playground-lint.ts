@@ -2,10 +2,9 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 export type Dialect = 'solid-v1' | 'solid-v2';
-export type LinterEngine = 'eslint' | 'oxlint';
+export type LinterEngine = 'oxlint';
 
 export interface LintRequest {
   code: string;
@@ -87,52 +86,13 @@ function symlinkPackage(temporaryDirectory: string, packageName: string, sourceN
   symlinkSync(source, target, 'dir');
 }
 
-function checkerConfig(temporaryDirectory: string, dialect: Dialect) {
-  const checkerPlugin = pathToFileURL(packageFile('solid-checker', 'eslint.cjs')).href;
-  const parser = pathToFileURL(packageFile('@typescript-eslint/parser', 'dist/index.js')).href;
-  return `import checker from ${JSON.stringify(checkerPlugin)};
-import parser from ${JSON.stringify(parser)};
-export default [{
-  files: ['**/*.tsx'],
-  languageOptions: {
-    parser,
-    parserOptions: { ecmaVersion: 2022, sourceType: 'module', ecmaFeatures: { jsx: true } },
-  },
-  plugins: { 'solid-checker': checker },
-  settings: { solidChecker: {
-    cwd: ${JSON.stringify(temporaryDirectory)},
-    project: './tsconfig.json',
-    dialect: ${JSON.stringify(dialect)},
-  } },
-  rules: { 'solid-checker/certification': 'error' },
-}];
-`;
-}
-
-function oxlintConfig(dialect: Dialect) {
+function oxlintConfig() {
   return JSON.stringify({
-    jsPlugins: [packageFile('solid-checker', 'eslint.cjs')],
-    settings: { solidChecker: { dialect } },
-    rules: { 'solid-checker/certification': 'error' },
+    // Keep Oxlint's native rules in this process. Loading the checker through
+    // Oxlint's ESLint JS-plugin bridge makes Oxlint allocate a second JS
+    // runtime, which can abort in constrained serverless Linux runtimes.
+    rules: {},
   });
-}
-
-function eslintDiagnostics(output: unknown): NormalizedDiagnostic[] {
-  if (!Array.isArray(output)) return [];
-  return output.flatMap((file) =>
-    Array.isArray(file?.messages)
-      ? file.messages.map((diagnostic: Record<string, unknown>) => ({
-          line: typeof diagnostic.line === 'number' ? diagnostic.line : 1,
-          endLine: typeof diagnostic.endLine === 'number' ? diagnostic.endLine : (diagnostic.line as number) || 1,
-          column: typeof diagnostic.column === 'number' ? diagnostic.column : 1,
-          endColumn:
-            typeof diagnostic.endColumn === 'number' ? diagnostic.endColumn : ((diagnostic.column as number) || 1) + 1,
-          message: typeof diagnostic.message === 'string' ? diagnostic.message : 'ESLint reported a finding.',
-          ruleId: typeof diagnostic.ruleId === 'string' ? diagnostic.ruleId : null,
-          severity: diagnostic.severity === 1 ? 1 : 2,
-        }))
-      : [],
-  );
 }
 
 function oxlintDiagnostics(output: unknown): NormalizedDiagnostic[] {
@@ -156,32 +116,87 @@ function oxlintDiagnostics(output: unknown): NormalizedDiagnostic[] {
   });
 }
 
-function selectedEngine(): LinterEngine {
-  return process.env.SOLID_PLAYGROUND_LINTER === 'eslint' ? 'eslint' : 'oxlint';
+function byteOffsetToIndex(source: string, byteOffset: number) {
+  if (byteOffset <= 0) return 0;
+  let bytes = 0;
+  let index = 0;
+  for (const character of source) {
+    const width = Buffer.byteLength(character);
+    if (bytes + width > byteOffset) break;
+    bytes += width;
+    index += character.length;
+  }
+  return index;
 }
 
-function runLinter(temporaryDirectory: string, dialect: Dialect, fix: boolean, engine: LinterEngine) {
-  const configName = engine === 'oxlint' ? '.oxlintrc.json' : 'eslint.config.mjs';
-  writeFileSync(
-    resolve(temporaryDirectory, configName),
-    engine === 'oxlint' ? oxlintConfig(dialect) : checkerConfig(temporaryDirectory, dialect),
-  );
-  const executable = engine === 'oxlint' ? packageFile('oxlint', 'bin/oxlint') : packageFile('eslint', 'bin/eslint.js');
+function sourcePosition(source: string, byteOffset: unknown) {
+  const index = typeof byteOffset === 'number' ? byteOffsetToIndex(source, byteOffset) : 0;
+  const prefix = source.slice(0, index);
+  const lines = prefix.split(/\r\n|\n|\r/);
+  return { line: lines.length, column: (lines.at(-1)?.length ?? 0) + 1 };
+}
+
+function checkerDiagnostics(source: string, output: unknown): NormalizedDiagnostic[] {
+  const findings = (output as { findings?: unknown[] })?.findings;
+  if (!Array.isArray(findings)) return [];
+  return findings.flatMap((finding) => {
+    if (!finding || typeof finding !== 'object') return [];
+    const value = finding as {
+      id?: unknown;
+      message?: unknown;
+      severity?: unknown;
+      primaryLocation?: { startByte?: unknown; endByte?: unknown };
+    };
+    const start = sourcePosition(source, value.primaryLocation?.startByte);
+    const end = sourcePosition(source, value.primaryLocation?.endByte);
+    const id = typeof value.id === 'string' ? value.id : 'checker';
+    const message = typeof value.message === 'string' ? value.message : 'Solid Checker reported a finding.';
+    return [{
+      line: start.line,
+      endLine: end.line,
+      column: start.column,
+      endColumn: end.line === start.line ? Math.max(start.column + 1, end.column) : end.column,
+      message: `[${id}] ${message}`,
+      ruleId: 'solid-checker/certification',
+      severity: value.severity === 'warning' ? 1 : 2,
+    }];
+  });
+}
+
+function runLinter(temporaryDirectory: string, fix: boolean) {
+  const configName = '.oxlintrc.json';
+  writeFileSync(resolve(temporaryDirectory, configName), oxlintConfig());
+  const executable = packageFile('oxlint', 'bin/oxlint');
   const args = [
     '--config',
     resolve(temporaryDirectory, configName),
     '--format',
     'json',
-    ...(engine === 'oxlint' ? ['--threads=1'] : []),
+    '--threads=1',
     ...(fix ? ['--fix'] : []),
     'src/Playground.tsx',
   ];
   return spawnSync(process.execPath, [executable, ...args], {
     cwd: temporaryDirectory,
     encoding: 'utf8',
-    env: engine === 'oxlint'
-      ? { ...process.env, RAYON_NUM_THREADS: '1', UV_THREADPOOL_SIZE: '1' }
-      : process.env,
+    env: { ...process.env, RAYON_NUM_THREADS: '1', UV_THREADPOOL_SIZE: '1' },
+  });
+}
+
+function runChecker(temporaryDirectory: string, dialect: Dialect) {
+  const executable = packageFile('solid-checker', 'bin/solid-checker.mjs');
+  return spawnSync(process.execPath, [
+    executable,
+    '--project',
+    resolve(temporaryDirectory, 'tsconfig.json'),
+    '--format',
+    'json',
+    '--dialect',
+    dialect,
+  ], {
+    cwd: temporaryDirectory,
+    encoding: 'utf8',
+    env: { ...process.env, SOLID_CHECKER_DAEMON: '0' },
   });
 }
 
@@ -210,12 +225,11 @@ export function runPlaygroundLint(request: LintRequest): LintResult {
     for (const packageName of ['solid-checker', '@solidjs']) symlinkPackage(temporaryDirectory, packageName);
     symlinkPackage(temporaryDirectory, 'solid-js', request.dialect === 'solid-v2' ? 'solid-js-v2' : 'solid-js');
 
-    let engine = selectedEngine();
-    let lint = runLinter(temporaryDirectory, request.dialect, request.fix, engine);
-    if (engine === 'oxlint' && (lint.error || (!lint.stdout.trim() && lint.stderr.trim()))) {
-      engine = 'eslint';
-      lint = runLinter(temporaryDirectory, request.dialect, request.fix, engine);
-    }
+    // The production path intentionally keeps checker out of Oxlint's
+    // jsPlugins bridge. Oxlint's native rules and solid-checker then run as
+    // two bounded processes over the same source/project.
+    const engine = 'oxlint';
+    const lint = runLinter(temporaryDirectory, request.fix);
     if (lint.error) throw lint.error;
     if (!lint.stdout.trim() && lint.stderr.trim()) {
       throw new Error(`${engine} failed: ${lint.stderr.trim()}`);
@@ -226,10 +240,25 @@ export function runPlaygroundLint(request: LintRequest): LintResult {
     } catch {
       throw new Error(lint.stderr.trim() || `${engine} returned invalid JSON output.`);
     }
+    const checker = runChecker(temporaryDirectory, request.dialect);
+    if (checker.error) throw checker.error;
+    if (checker.status !== 0) {
+      throw new Error(`solid-checker failed: ${checker.stderr.trim() || `exit code ${checker.status}`}`);
+    }
+    let checkerOutput: unknown;
+    try {
+      checkerOutput = JSON.parse(checker.stdout || '{}');
+    } catch {
+      throw new Error(checker.stderr.trim() || 'solid-checker returned invalid JSON output.');
+    }
+    const currentSource = readFileSync(sourceFile, 'utf8');
     const output = request.fix ? readFileSync(sourceFile, 'utf8') : undefined;
     return {
       engine,
-      diagnostics: engine === 'oxlint' ? oxlintDiagnostics(parsed) : eslintDiagnostics(parsed),
+      diagnostics: [
+        ...oxlintDiagnostics(parsed),
+        ...checkerDiagnostics(currentSource, checkerOutput),
+      ],
       output,
       fixed: request.fix && output !== request.code,
     };
