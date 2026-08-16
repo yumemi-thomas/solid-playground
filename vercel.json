@@ -4,6 +4,23 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build",
   "outputDirectory": "packages/playground/dist",
+  "functions": {
+    "api/solid-playground-lint.ts": {
+      "includeFiles": [
+        "node_modules/solid-checker/**",
+        "node_modules/solid-checker-wasm/**",
+        "node_modules/@solid-checker/**",
+        "node_modules/oxlint/**",
+        "node_modules/@oxlint/**",
+        "node_modules/eslint/**",
+        "node_modules/@eslint/**",
+        "node_modules/@typescript-eslint/**",
+        "node_modules/typescript/**",
+        "node_modules/solid-js/**",
+        "node_modules/@solidjs/**"
+      ]
+    }
+  },
   "rewrites": [
     { "source": "/__solid-playground/lint", "destination": "/api/solid-playground-lint" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
