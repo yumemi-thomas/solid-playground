@@ -1,11 +1,15 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build",
   "outputDirectory": "packages/playground/dist",
+  "functions": {
+    "api/**/*.ts": { "maxDuration": 60 }
+  },
   "rewrites": [
     { "source": "/__solid-playground/lint", "destination": "/api/__solid-playground/lint" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
