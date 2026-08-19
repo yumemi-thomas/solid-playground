@@ -1,4 +1,4 @@
-import { createSignal, createEffect, batch, onCleanup, onMount, Show, JSX } from 'solid-js';
+import { createSignal, createEffect, batch, onCleanup, onMount, untrack, Show, JSX } from 'solid-js';
 import { unwrap } from 'solid-js/store';
 import { createMediaQuery } from '@solid-primitives/media';
 import { Preview } from './preview';
@@ -353,6 +353,23 @@ export const Repl: ReplProps = (props) => {
         }
       });
 
+      // The layout only opens the entry file, so a host that swaps the whole tab
+      // set has to say which of the new files it wants on screen.
+      createEffect(() => {
+        const names = props.openFiles;
+        if (!names?.length) return;
+        untrack(() => {
+          let reveal: string | undefined;
+          for (const name of names) {
+            const file = workspace.byName(name);
+            if (!file) continue;
+            openFile(file.id);
+            reveal ??= file.id;
+          }
+          if (reveal) dockview.getGroupPanel(reveal)?.focus();
+        });
+      });
+
       const dockview = new DockviewComponent(ref, {
         theme: themeAbyssSpaced,
         defaultTabComponent: 'default',
@@ -635,6 +652,7 @@ export const Repl: ReplProps = (props) => {
         <Show when={isMobile()} fallback={<DesktopRepl />}>
           <MobileRepl
             initialViews={[entryFileId(), 'Preview'].filter((id): id is string => !!id)}
+            openFiles={props.openFiles}
             preview={previewSection}
             outputPane={outputSection}
             onPreviewOpen={setPreviewVisible}

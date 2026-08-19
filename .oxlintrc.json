@@ -12,5 +12,6 @@
     "@pandacss/no-unsafe-token-fn-usage": "warn",
     "@pandacss/no-deprecated-tokens": "warn",
     "eslint/no-unassigned-vars": "off"
-  }
+  },
+  "ignorePatterns": ["packages/playground/examples/"]
 }

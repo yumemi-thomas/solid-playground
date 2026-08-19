@@ -8,10 +8,12 @@ import { useMachine, normalizeProps } from '@zag-js/solid';
 import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
 import { VersionDropdown } from './versionDropdown';
+import { ExampleSelect, ExampleVariantButton } from './exampleSelect';
 import { API, useAppContext } from '../context';
 import { Button, LinkButton } from 'solid-repl/src/components/ui/Button';
 import { useMenu } from 'solid-repl/src/components/ui/Menu';
 import { css, cx } from 'styled-system/css';
+import type { ExampleVariant } from '../examples';
 
 import logo from '../assets/logo.svg?url';
 
@@ -87,6 +89,10 @@ export const Header: ParentComponent<{
   share: () => Promise<string>;
   solidVersion?: string;
   onSolidVersionChange?: (version: string) => void;
+  exampleRule?: string;
+  onExampleChange?: (rule: string) => void;
+  exampleVariant?: ExampleVariant;
+  onExampleVariantToggle?: () => void;
 }> = (props) => {
   const [copy, setCopy] = createSignal(false);
   const context = useAppContext()!;
@@ -140,7 +146,7 @@ export const Header: ParentComponent<{
       </A>
       {resolved() || (
         <h1 class={titleStyles}>
-          Solid<b>JS</b> Playground
+          Solid<b>-Checker</b> Playground
         </h1>
       )}
       <div class={css({ ml: 'auto', display: 'flex', alignItems: 'center', gap: 2 })}>
@@ -154,6 +160,10 @@ export const Header: ParentComponent<{
                 showOnMobile={false}
                 solidVersion={props.solidVersion}
                 onSolidVersionChange={props.onSolidVersionChange}
+                exampleRule={props.exampleRule}
+                onExampleChange={props.onExampleChange}
+                exampleVariant={props.exampleVariant}
+                onExampleVariantToggle={props.onExampleVariantToggle}
               />
             </div>
           }
@@ -167,6 +177,10 @@ export const Header: ParentComponent<{
                   showOnMobile
                   solidVersion={props.solidVersion}
                   onSolidVersionChange={props.onSolidVersionChange}
+                  exampleRule={props.exampleRule}
+                  onExampleChange={props.onExampleChange}
+                  exampleVariant={props.exampleVariant}
+                  onExampleVariantToggle={props.onExampleVariantToggle}
                 />
               </div>
             </div>
@@ -215,6 +229,10 @@ const HeaderMenuItems: ParentComponent<{
   showOnMobile: boolean;
   solidVersion?: string;
   onSolidVersionChange?: (version: string) => void;
+  exampleRule?: string;
+  onExampleChange?: (rule: string) => void;
+  exampleVariant?: ExampleVariant;
+  onExampleVariantToggle?: () => void;
 }> = (props) => {
   const context = useAppContext()!;
   const mobileBtn = () => (props.showOnMobile ? menuButtonOnMobile : '');
@@ -242,6 +260,25 @@ const HeaderMenuItems: ParentComponent<{
             showOnMobile={props.showOnMobile}
           />
         )}
+      </Show>
+
+      <Show when={props.onExampleChange}>
+        {(onChange) => (
+          <ExampleSelect
+            version={props.solidVersion}
+            rule={props.exampleRule ?? ''}
+            onChange={(rule) => onChange()(rule)}
+            showOnMobile={props.showOnMobile}
+          />
+        )}
+      </Show>
+
+      <Show when={props.exampleRule && props.onExampleVariantToggle}>
+        <ExampleVariantButton
+          variant={props.exampleVariant ?? 'incorrect'}
+          onToggle={() => props.onExampleVariantToggle!()}
+          showOnMobile={props.showOnMobile}
+        />
       </Show>
 
       <ZoomDropdown showMenu={props.showOnMobile} />

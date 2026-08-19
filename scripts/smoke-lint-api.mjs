@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 
 const { runPlaygroundLint } = await import('../api/solid-playground-lint.ts');
 
-const result = runPlaygroundLint({
+const result = await runPlaygroundLint({
   code: 'function Bad(props: { name: string }) { const name = props.name; return <h1>{name}</h1>; }',
   dialect: 'solid-v2',
   fix: false,

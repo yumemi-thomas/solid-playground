@@ -14,6 +14,7 @@ import { Button } from 'solid-repl/src/components/ui/Button';
 import { useDialog } from 'solid-repl/src/components/ui/Dialog';
 import { css } from 'styled-system/css';
 import { normalizeSolidVersion } from '../solidVersion';
+import { EXAMPLE_FILE, OTHER_VARIANT, dialectFor, findExample, loadExample, type ExampleVariant } from '../examples';
 
 function parseHash<T>(hash: string, fallback: T): T {
   try {
@@ -61,6 +62,8 @@ const titleInput = css({
 const spinner = css({ h: 12, w: 12, m: 'auto', color: 'neutral.500', animation: 'spin 1s linear infinite' });
 
 const dialogActions = css({ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 });
+
+const exampleErrorStyles = css({ px: 4, py: 2, fontSize: 'sm', color: 'red.700', _dark: { color: 'red.300' } });
 
 interface InternalTab extends Tab {
   _source: string;
@@ -160,12 +163,72 @@ export const Edit = () => {
     if (changed) trueSetTabs(current.slice());
   };
 
+  // Which example the tab currently holds, and which of its two variants,
+  // remembered so a reload does not show an example's code next to an empty
+  // picker or a button labelled for the wrong direction. Any hand edit
+  // invalidates both.
+  const EXAMPLE_KEY = 'solid-playground:example';
+  const stored = readJson<{ rule: string; variant: ExampleVariant }>(EXAMPLE_KEY);
+  const restored = stored && findExample(storedVersion, stored.rule) ? stored : undefined;
+
+  const [exampleRule, trueSetExampleRule] = createSignal(restored?.rule ?? '');
+  const [exampleVariant, trueSetExampleVariant] = createSignal<ExampleVariant>(restored?.variant ?? 'incorrect');
+
+  const rememberExample = (rule: string, variant: ExampleVariant) => {
+    trueSetExampleRule(rule);
+    trueSetExampleVariant(variant);
+    if (rule) writeJson(EXAMPLE_KEY, { rule, variant });
+    else safeRemove(EXAMPLE_KEY);
+  };
+  const [exampleError, setExampleError] = createSignal('');
+  // A fresh array each load, so re-picking the same rule re-reveals the file.
+  const [exampleOpenFiles, setExampleOpenFiles] = createSignal<string[]>([]);
+
+  const showExample = (version: string, rule: string, variant: ExampleVariant) =>
+    loadExample(version, rule, variant).then(
+      (source) => {
+        setExampleError('');
+        rememberExample(rule, variant);
+        // One file, so swapping variants replaces this tab's source in place and
+        // the open editor follows it.
+        setTabs([{ name: EXAMPLE_FILE, source }]);
+        setExampleOpenFiles([EXAMPLE_FILE]);
+        updateRepl();
+      },
+      (error: unknown) => setExampleError(error instanceof Error ? error.message : String(error)),
+    );
+
   const changeSolidVersion = (version: string) => {
     const selected = normalizeSolidVersion(version);
     setSolidVersion(selected);
     setResolvedSolidVersion(selected);
     localStorage.setItem('solidVersion', selected);
     migrateTabs(selected);
+
+    const rule = exampleRule();
+    if (!rule) return;
+    // The catalogs overlap by defect, not by rule name. Where the other dialect
+    // has the same rule, show its own example rather than analysing this one's
+    // code under the wrong dialect; where it does not, only the selection is
+    // dropped and the tabs are left alone.
+    const bare = rule.replace(/^v1\//, '');
+    const equivalent = dialectFor(selected) === 'solid-v1' ? `v1/${bare}` : bare;
+    if (findExample(selected, equivalent)) void showExample(selected, equivalent, exampleVariant());
+    else rememberExample('', 'incorrect');
+  };
+
+  const changeExample = (rule: string) => {
+    if (!rule) {
+      rememberExample('', 'incorrect');
+      return;
+    }
+    // A newly picked rule always opens on the code that reports it.
+    void showExample(solidVersion(), rule, 'incorrect');
+  };
+
+  const toggleExampleVariant = () => {
+    const rule = exampleRule();
+    if (rule) void showExample(solidVersion(), rule, OTHER_VARIANT[exampleVariant()]);
   };
 
   context.setTabs(tabs);
@@ -254,6 +317,8 @@ export const Edit = () => {
   const forkDeclined = () => forkDeclinedFor() === params.repl;
 
   const onUserEdit = () => {
+    // The tab no longer holds the example as shipped, so stop claiming it does.
+    if (exampleRule()) rememberExample('', 'incorrect');
     if (!readonly() || forkDeclined()) return;
     setForkPromptFor(params.repl);
   };
@@ -297,7 +362,7 @@ export const Edit = () => {
         });
       }
     },
-    !!scratchpad() ? 10 : 1000,
+    scratchpad() ? 10 : 1000,
   );
 
   return (
@@ -305,6 +370,10 @@ export const Edit = () => {
       <Header
         solidVersion={solidVersion()}
         onSolidVersionChange={changeSolidVersion}
+        exampleRule={exampleRule()}
+        onExampleChange={changeExample}
+        exampleVariant={exampleVariant()}
+        onExampleVariantToggle={toggleExampleVariant}
         fork={() => {}}
         share={async () => {
           if (scratchpad()) {
@@ -339,6 +408,9 @@ export const Edit = () => {
           />
         </Show>
       </Header>
+      <Show when={exampleError()}>
+        {(message) => <p class={exampleErrorStyles}>Could not load that example: {message()}</p>}
+      </Show>
       <Suspense
         fallback={
           <svg class={spinner} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -360,6 +432,7 @@ export const Edit = () => {
             dark={context.dark()}
             tabs={tabs()}
             setTabs={setTabs}
+            openFiles={exampleOpenFiles()}
             reset={reset}
             onUserEdit={onUserEdit}
             storage={replStorage}

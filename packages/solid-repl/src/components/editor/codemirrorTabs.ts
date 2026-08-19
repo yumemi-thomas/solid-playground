@@ -135,6 +135,8 @@ interface LintResponse {
   markers?: LintMarker[];
   output?: string;
   fixed?: boolean;
+  /** Set when the linter could not run at all; the reason, for the reader. */
+  unavailable?: string;
 }
 
 interface LintMarker {
@@ -162,6 +164,20 @@ const markersToDiagnostics = (view: EditorView, markers: LintMarker[]): Diagnost
   });
 };
 
+// A failed lint must not read as a clean file: an empty marker list and "nothing
+// was analysed" look identical in the gutter, so the reason is surfaced instead.
+const unavailableDiagnostic = (view: EditorView, reason: string): Diagnostic => {
+  const firstLine = view.state.doc.line(1);
+  return {
+    from: firstLine.from,
+    to: firstLine.to,
+    severity: 'error',
+    message:
+      `Solid Checker did not run, so this file has NOT been analysed — ${reason}.\n` +
+      'Findings are missing rather than absent.',
+  };
+};
+
 // `forceLinting` only flushes an already-pending lint; the linter treats this effect as a
 // reason to re-run when lint inputs change without a document edit (type sync, lint config).
 const relintRequested = StateEffect.define<null>();
@@ -179,17 +195,25 @@ const buildLintExtension = (
       const isTs = tsExts.has(fileExtension(uri));
       if (!isTs && !opts.linter) return [];
 
-      const diagnostics: Diagnostic[] = [];
-      if (isTs) {
-        session.client.sync();
-        diagnostics.push(...(await session.getDiagnostics(uri, view)));
-      }
-      if (isTs && opts.lintEnabled()) {
-        const res = await opts.linter?.tryRequest<LintResponse>('LINT', {
-          code: view.state.doc.toString(),
-          version: opts.lintVersion?.(),
-        });
-        diagnostics.push(...markersToDiagnostics(view, res?.markers ?? []));
+      // The two sources are independent, so they run together. Awaiting the
+      // TypeScript service first used to hold the checker's findings behind type
+      // acquisition, which is by far the slower of the two on a cold editor.
+      if (isTs) session.client.sync();
+      const [types, lintResult] = await Promise.all([
+        isTs ? session.getDiagnostics(uri, view) : Promise.resolve<Diagnostic[]>([]),
+        isTs && opts.lintEnabled()
+          ? opts.linter?.tryRequest<LintResponse>('LINT', {
+              code: view.state.doc.toString(),
+              version: opts.lintVersion?.(),
+            })
+          : Promise.resolve(undefined),
+      ]);
+
+      const diagnostics: Diagnostic[] = [...types];
+      if (lintResult?.unavailable) {
+        diagnostics.push(unavailableDiagnostic(view, lintResult.unavailable));
+      } else {
+        diagnostics.push(...markersToDiagnostics(view, lintResult?.markers ?? []));
       }
       return diagnostics;
     },

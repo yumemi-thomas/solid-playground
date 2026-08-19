@@ -36,6 +36,11 @@ declare module 'solid-repl/dist/repl' {
     version?: string;
     hideDevtools?: boolean;
     setTabs: (tab: Tab[]) => void;
+    /**
+     * File names to open and reveal. Pass a fresh array to request it again;
+     * the first name that resolves to a file becomes the active tab.
+     */
+    openFiles?: string[];
     reset: () => void;
     onUserEdit?: () => void;
     storage?: ReplStorage;

@@ -1,5 +1,14 @@
-import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 
@@ -29,25 +38,41 @@ export interface LintResult {
   fixed: boolean;
 }
 
-const repositoryRoot = resolve(process.cwd());
-const moduleRoots = [process.cwd(), repositoryRoot].flatMap((root) => [
+function ancestors(from: string) {
+  const chain: string[] = [];
+  let current = resolve(from);
+  while (true) {
+    chain.push(current);
+    const parent = dirname(current);
+    if (parent === current) return chain;
+    current = parent;
+  }
+}
+
+// The Vercel function runs with the repository root as its cwd; the Vite dev
+// server runs with `packages/playground` as its cwd, and `pnpm dev` can be
+// invoked from anywhere. Anchoring on this module's own directory as well means
+// the workspace root is found in all three cases instead of only the first.
+const searchRoots = [...new Set([...ancestors(process.cwd()), ...ancestors(import.meta.dirname)])];
+
+const repositoryRoot =
+  searchRoots.find((root) => existsSync(resolve(root, 'pnpm-workspace.yaml'))) ?? resolve(process.cwd());
+
+const moduleRoots = searchRoots.flatMap((root) => [
   resolve(root, 'node_modules'),
   resolve(root, 'packages/playground/node_modules'),
   resolve(root, 'packages/solid-repl/node_modules'),
 ]);
 
 function packagePath(packageName: string, sourceName = packageName) {
-  const directSource = moduleRoots
-    .map((root) => resolve(root, sourceName))
-    .find((candidate) => existsSync(candidate));
+  const directSource = moduleRoots.map((root) => resolve(root, sourceName)).find((candidate) => existsSync(candidate));
   if (directSource) return directSource;
 
   // Vercel can retain pnpm's package store without retaining the workspace
   // symlink for an aliased package such as `solid-js-v2`.
   const storeName = sourceName === 'solid-js-v2' ? 'solid-js' : sourceName;
-  const storePrefix = storeName.startsWith('@') && !storeName.includes('/')
-    ? `${storeName}+`
-    : `${storeName.replace('/', '+')}@`;
+  const storePrefix =
+    storeName.startsWith('@') && !storeName.includes('/') ? `${storeName}+` : `${storeName.replace('/', '+')}@`;
   const dependencyName = packageName === '@solidjs' ? '@solidjs/web' : packageName;
   const manifest = JSON.parse(readFileSync(resolve(repositoryRoot, 'package.json'), 'utf8')) as {
     dependencies?: Record<string, string>;
@@ -65,9 +90,10 @@ function packagePath(packageName: string, sourceName = packageName) {
       .reverse();
     for (const storeEntry of storeEntries) {
       const packageRoot = resolve(storeRoot, storeEntry, 'node_modules');
-      const candidate = storeName.startsWith('@') && !storeName.includes('/')
-        ? resolve(packageRoot, storeName)
-        : resolve(packageRoot, storeName);
+      const candidate =
+        storeName.startsWith('@') && !storeName.includes('/')
+          ? resolve(packageRoot, storeName)
+          : resolve(packageRoot, storeName);
       if (existsSync(candidate)) return candidate;
     }
   }
@@ -151,15 +177,41 @@ function checkerDiagnostics(source: string, output: unknown): NormalizedDiagnost
     const end = sourcePosition(source, value.primaryLocation?.endByte);
     const id = typeof value.id === 'string' ? value.id : 'checker';
     const message = typeof value.message === 'string' ? value.message : 'Solid Checker reported a finding.';
-    return [{
-      line: start.line,
-      endLine: end.line,
-      column: start.column,
-      endColumn: end.line === start.line ? Math.max(start.column + 1, end.column) : end.column,
-      message: `[${id}] ${message}`,
-      ruleId: 'solid-checker/certification',
-      severity: value.severity === 'warning' ? 1 : 2,
-    }];
+    return [
+      {
+        line: start.line,
+        endLine: end.line,
+        column: start.column,
+        endColumn: end.line === start.line ? Math.max(start.column + 1, end.column) : end.column,
+        message: `[${id}] ${message}`,
+        ruleId: 'solid-checker/certification',
+        severity: value.severity === 'warning' ? 1 : 2,
+      },
+    ];
+  });
+}
+
+interface ProcessResult {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+}
+
+function run(command: string, args: string[], options: { cwd: string; env: NodeJS.ProcessEnv }) {
+  return new Promise<ProcessResult>((resolveResult, reject) => {
+    const child = spawn(command, args, { ...options, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', (chunk: string) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk: string) => {
+      stderr += chunk;
+    });
+    child.once('error', reject);
+    child.once('close', (status) => resolveResult({ status, stdout, stderr }));
   });
 }
 
@@ -176,31 +228,22 @@ function runLinter(temporaryDirectory: string, fix: boolean) {
     ...(fix ? ['--fix'] : []),
     'src/Playground.tsx',
   ];
-  return spawnSync(process.execPath, [executable, ...args], {
+  return run(process.execPath, [executable, ...args], {
     cwd: temporaryDirectory,
-    encoding: 'utf8',
     env: { ...process.env, RAYON_NUM_THREADS: '1', UV_THREADPOOL_SIZE: '1' },
   });
 }
 
 function runChecker(temporaryDirectory: string, dialect: Dialect) {
   const executable = packageFile('solid-checker', 'bin/solid-checker.mjs');
-  return spawnSync(process.execPath, [
-    executable,
-    '--project',
-    resolve(temporaryDirectory, 'tsconfig.json'),
-    '--format',
-    'json',
-    '--dialect',
-    dialect,
-  ], {
-    cwd: temporaryDirectory,
-    encoding: 'utf8',
-    env: { ...process.env, SOLID_CHECKER_DAEMON: '0' },
-  });
+  return run(
+    process.execPath,
+    [executable, '--project', resolve(temporaryDirectory, 'tsconfig.json'), '--format', 'json', '--dialect', dialect],
+    { cwd: temporaryDirectory, env: { ...process.env, SOLID_CHECKER_DAEMON: '0' } },
+  );
 }
 
-export function runPlaygroundLint(request: LintRequest): LintResult {
+export async function runPlaygroundLint(request: LintRequest): Promise<LintResult> {
   const temporaryDirectory = mkdtempSync(resolve(tmpdir(), 'solid-playground-lint-'));
   try {
     const sourceDirectory = resolve(temporaryDirectory, 'src');
@@ -228,9 +271,16 @@ export function runPlaygroundLint(request: LintRequest): LintResult {
     // The production path intentionally keeps checker out of Oxlint's
     // jsPlugins bridge. Oxlint's native rules and solid-checker then run as
     // two bounded processes over the same source/project.
+    //
+    // For a plain lint the two read the source and never write it, so they run
+    // concurrently and the request costs the slower of the two rather than their
+    // sum. A `--fix` run rewrites the source, so there the checker has to wait
+    // and analyse what Oxlint left behind.
     const engine = 'oxlint';
-    const lint = runLinter(temporaryDirectory, request.fix);
-    if (lint.error) throw lint.error;
+    const [lint, checker] = request.fix
+      ? [await runLinter(temporaryDirectory, true), await runChecker(temporaryDirectory, request.dialect)]
+      : await Promise.all([runLinter(temporaryDirectory, false), runChecker(temporaryDirectory, request.dialect)]);
+
     if (!lint.stdout.trim() && lint.stderr.trim()) {
       throw new Error(`${engine} failed: ${lint.stderr.trim()}`);
     }
@@ -240,8 +290,6 @@ export function runPlaygroundLint(request: LintRequest): LintResult {
     } catch {
       throw new Error(lint.stderr.trim() || `${engine} returned invalid JSON output.`);
     }
-    const checker = runChecker(temporaryDirectory, request.dialect);
-    if (checker.error) throw checker.error;
     if (checker.status !== 0) {
       throw new Error(`solid-checker failed: ${checker.stderr.trim() || `exit code ${checker.status}`}`);
     }
@@ -255,10 +303,7 @@ export function runPlaygroundLint(request: LintRequest): LintResult {
     const output = request.fix ? readFileSync(sourceFile, 'utf8') : undefined;
     return {
       engine,
-      diagnostics: [
-        ...oxlintDiagnostics(parsed),
-        ...checkerDiagnostics(currentSource, checkerOutput),
-      ],
+      diagnostics: [...oxlintDiagnostics(parsed), ...checkerDiagnostics(currentSource, checkerOutput)],
       output,
       fixed: request.fix && output !== request.code,
     };
@@ -298,7 +343,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       response.status(400).json({ message: 'dialect must be solid-v1 or solid-v2' });
       return;
     }
-    const result = runPlaygroundLint({
+    const result = await runPlaygroundLint({
       code: body.code,
       dialect: body.dialect as 'solid-v1' | 'solid-v2',
       fix: body.fix === true,

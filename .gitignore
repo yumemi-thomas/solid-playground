@@ -2,3 +2,6 @@ node_modules/
 dist/
 .DS_Store
 styled-system/
+
+# Local Claude Code config (launch.json, settings.local.json)
+.claude/

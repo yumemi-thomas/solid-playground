@@ -41,7 +41,7 @@
     "codemirror": "^6.0.2",
     "dedent": "^1.7.2",
     "dockview-core": "^7.0.4",
-    "solid-checker-wasm": "0.3.1-beta.2",
+    "solid-checker-wasm": "0.4.0-beta.0",
     "solid-heroicons": "^3.2.4"
   },
   "devDependencies": {

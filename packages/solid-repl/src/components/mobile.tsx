@@ -1,4 +1,4 @@
-import { Component, For, JSX, Show, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { Component, For, JSX, Show, createEffect, createSignal, onCleanup, onMount, untrack } from 'solid-js';
 import { Icon } from 'solid-heroicons';
 import { plus, xMark } from 'solid-heroicons/outline';
 import { NewTab } from './newTab';
@@ -10,6 +10,8 @@ import { css } from 'styled-system/css';
 
 interface MobileReplProps {
   initialViews: string[];
+  /** File names to open and reveal; see the `openFiles` prop on `Repl`. */
+  openFiles?: string[];
   preview: (interactive: () => boolean) => JSX.Element;
   outputPane: () => JSX.Element;
   onPreviewOpen: (open: boolean) => void;
@@ -201,6 +203,17 @@ export const MobileRepl: Component<MobileReplProps> = (props) => {
     if (id && workspace.byId(id)) props.onActiveFile(id);
   };
   setActive(activeId());
+
+  createEffect(() => {
+    const names = props.openFiles;
+    if (!names?.length) return;
+    untrack(() => {
+      const ids = names.map((name) => workspace.byName(name)?.id).filter((id): id is string => !!id);
+      if (!ids.length) return;
+      setOpenIds([...new Set(openIds().concat(ids))]);
+      setActiveId(ids[0]);
+    });
+  });
 
   createEffect(() => props.onPreviewOpen(openIds().includes('Preview')));
   createEffect(() => props.onOutputOpen(openIds().includes('Output')));

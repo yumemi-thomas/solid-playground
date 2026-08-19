@@ -62,7 +62,7 @@ function lintMiddleware(): Connect.NextHandleFunction {
         sendJson(response, 400, { message: 'dialect must be solid-v1 or solid-v2' });
         return;
       }
-      const result = runPlaygroundLint({ code: body.code, dialect: body.dialect, fix: body.fix === true });
+      const result = await runPlaygroundLint({ code: body.code, dialect: body.dialect, fix: body.fix === true });
       sendJson(response, 200, result);
     } catch (error) {
       sendJson(response, 400, { message: error instanceof Error ? error.message : String(error) });

@@ -9,5 +9,5 @@
   "trailingComma": "all",
   "useTabs": false,
   "quoteProps": "consistent",
-  "ignorePatterns": ["node_modules/", "dist/", "pnpm-lock.yaml"]
+  "ignorePatterns": ["dist/", "node_modules/", "packages/playground/examples/", "pnpm-lock.yaml"]
 }

@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@solidjs/web",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "types": [],
+    "paths": {
+      "solid-js": ["../../../../node_modules/solid-js-v2/types/index.d.ts"],
+      "solid-js/*": ["../../../../node_modules/solid-js-v2/*"],
+      "@solidjs/web": ["../../../../node_modules/@solidjs/web/types/index.d.ts"],
+      "@solidjs/web/*": ["../../../../node_modules/@solidjs/web/types/*"]
+    }
+  },
+  "include": ["./**/*.tsx"]
+}
