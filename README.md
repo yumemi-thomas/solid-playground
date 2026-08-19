@@ -12,6 +12,20 @@ Solid linting with a Vite dev-server boundary. The boundary runs the published
 `solid-checker@0.4.0-beta.0` native binary alongside Oxlint's own rules; it does
 not load `eslint-plugin-solid` or `eslint-solid-standalone`.
 
+## Scope: a linting playground
+
+This fork exists to show what `solid-checker` reports, so the parts of the
+upstream playground that serve `playground.solidjs.com`'s hosted-repl product are
+gone: sign-in, the profile menu, the saved-repl list and its routes, publishing
+and forking a repl, the shareable-link button, and Export to Zip. Nothing here
+talks to `api.solidjs.com`, and there is no account to have. The single
+scratchpad lives in `localStorage`, and a `#hash` in the URL is still read once
+on load so an old share link opens its files.
+
+What stays is what a linting playground needs: the editor with inline
+diagnostics, the rule-example picker below, the Solid version switch, the
+compiled-output and preview panes, editor scaling, and dark mode.
+
 There are 4 compile-output modes available:
 
 - DOM: The classic SPA generation mechanism

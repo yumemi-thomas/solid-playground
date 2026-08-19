@@ -1,73 +1,26 @@
-import { Accessor, createContext, createResource, createSignal, ParentComponent, Resource, useContext } from 'solid-js';
-import type { Tab } from 'solid-repl';
+import { Accessor, createContext, createSignal, ParentComponent, useContext } from 'solid-js';
 import { isDarkTheme } from './utils/isDarkTheme';
 
 interface AppContextType {
-  token: string;
-  user: Resource<{ display: string; avatar: string } | undefined>;
-  profile: Accessor<string>;
-  tabs: Accessor<Tab[] | undefined>;
-  setTabs: (x: Accessor<Tab[] | undefined> | undefined) => void;
   dark: Accessor<boolean>;
   toggleDark: () => void;
 }
 
 const AppContext = createContext<AppContextType>();
 
-// export const API = 'http://localhost:8787';
-// export const API = '/api';
-export const API = 'https://api.solidjs.com';
-
 export const AppContextProvider: ParentComponent = (props) => {
-  const [token, setToken] = createSignal(localStorage.getItem('token') || '');
-  const [user] = createResource(token, async (token) => {
-    if (!token)
-      return {
-        display: '',
-        avatar: '',
-      };
-    const result = await fetch(`${API}/profile`, {
-      headers: {
-        authorization: `Bearer ${token}`,
-      },
-    });
-    const body = await result.json();
-    return {
-      display: body.display,
-      avatar: body.avatar,
-    };
-  });
-
   const [dark, setDark] = createSignal(isDarkTheme());
   document.body.classList.toggle('dark', dark());
 
-  let [tabsGetter, setTabs] = createSignal<Accessor<Tab[] | undefined>>();
   return (
     <AppContext.Provider
       value={{
-        get token() {
-          return token();
-        },
-        set token(x) {
-          setToken(x);
-          localStorage.setItem('token', x);
-        },
-        user,
-        profile: () => user()?.display || 'anonymous',
-        tabs() {
-          const tabs = tabsGetter();
-          if (!tabs) return undefined;
-          return tabs();
-        },
-        setTabs(x) {
-          setTabs(() => x);
-        },
         dark,
         toggleDark() {
-          let x = !dark();
-          document.body.classList.toggle('dark', x);
-          setDark(x);
-          localStorage.setItem('dark', String(x));
+          const next = !dark();
+          document.body.classList.toggle('dark', next);
+          setDark(next);
+          localStorage.setItem('dark', String(next));
         },
       }}
     >

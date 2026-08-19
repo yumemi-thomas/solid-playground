@@ -1,17 +1,13 @@
-import { A } from '@solidjs/router';
 import { Icon } from 'solid-heroicons';
-import { unwrap } from 'solid-js/store';
-import { ParentComponent, Show, children, createMemo, createSignal, createUniqueId, onCleanup } from 'solid-js';
-import { share, link, arrowDownTray, xCircle, bars_3, moon, sun } from 'solid-heroicons/outline';
+import { Component, Show, createMemo, createSignal, createUniqueId, onCleanup } from 'solid-js';
+import { bars_3, moon, sun, xCircle } from 'solid-heroicons/outline';
 import * as popover from '@zag-js/popover';
 import { useMachine, normalizeProps } from '@zag-js/solid';
-import { exportToZip } from '../utils/exportFiles';
 import { ZoomDropdown } from './zoomDropdown';
 import { VersionDropdown } from './versionDropdown';
 import { ExampleSelect, ExampleVariantButton } from './exampleSelect';
-import { API, useAppContext } from '../context';
+import { useAppContext } from '../context';
 import { Button, LinkButton } from 'solid-repl/src/components/ui/Button';
-import { useMenu } from 'solid-repl/src/components/ui/Menu';
 import { css, cx } from 'styled-system/css';
 import type { ExampleVariant } from '../examples';
 
@@ -23,7 +19,7 @@ const headerStyles = css({
   zIndex: 12,
   display: 'flex',
   alignItems: 'center',
-  gap: 4,
+  gap: 2,
   p: 1,
   px: 2,
   fontSize: 'sm',
@@ -31,14 +27,24 @@ const headerStyles = css({
   _dark: { bg: 'neutral.950' },
 });
 
+// The title used to set `lineHeight: 0` so the tracked-out uppercase text sat
+// flush with the logo. Combined with wrapping that drew both lines on top of each
+// other on a narrow screen, and combined with `overflow: hidden` it clipped the
+// text away entirely. The flex row already centres it, so a normal line box is
+// all it needs; `nowrap` plus an ellipsis keeps it to one line at any width.
 const titleStyles = css({
-  lineHeight: 0,
+  lineHeight: 1,
   letterSpacing: 'widest',
   textTransform: 'uppercase',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  minW: 0,
 });
 
 const menuButtonOnMobile = css({
   rounded: 'none',
+  justifyContent: 'flex-start',
   _active: { bg: 'gray.300' },
   _hover: { bg: 'gray.300', _dark: { color: 'black' } },
 });
@@ -55,7 +61,8 @@ const mobileMenuPanel = css({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
-  width: 'fit-content',
+  width: 'max-content',
+  maxWidth: 'calc(100vw - 1rem)',
   borderWidth: '1px',
   borderColor: 'neutral.200',
   bg: 'white',
@@ -64,29 +71,7 @@ const mobileMenuPanel = css({
   _dark: { borderColor: 'neutral.700', bg: 'neutral.900' },
 });
 
-const profileButtonStyles = css({
-  display: 'flex',
-  alignItems: 'center',
-  position: 'relative',
-  flexShrink: 0,
-  cursor: 'pointer',
-  lineHeight: 'snug',
-});
-
-const loginLink = css({
-  mx: 1,
-  px: 3,
-  py: 1.5,
-  rounded: 'md',
-  bg: 'solidc',
-  color: 'white',
-  fontSize: 'sm',
-  _hover: { bg: 'solidc/90' },
-});
-
-export const Header: ParentComponent<{
-  fork?: () => void;
-  share: () => Promise<string>;
+export const Header: Component<{
   solidVersion?: string;
   onSolidVersionChange?: (version: string) => void;
   exampleRule?: string;
@@ -94,9 +79,6 @@ export const Header: ParentComponent<{
   exampleVariant?: ExampleVariant;
   onExampleVariantToggle?: () => void;
 }> = (props) => {
-  const [copy, setCopy] = createSignal(false);
-  const context = useAppContext()!;
-  const resolved = children(() => props.children);
   const mql = window.matchMedia('(max-width: 767px)');
   const [isMobile, setIsMobile] = createSignal(mql.matches);
   const onChange = () => setIsMobile(mql.matches);
@@ -110,78 +92,28 @@ export const Header: ParentComponent<{
   });
   const mobileApi = createMemo(() => popover.connect(mobileMenu, normalizeProps));
 
-  const profile = useMenu(
-    () => [
-      {
-        value: 'profile',
-        label: context.user()?.display ?? '',
-        onSelect: () => {
-          window.location.href = `/${context.profile()}`;
-        },
-      },
-      {
-        value: 'sign-out',
-        label: 'Sign Out',
-        onSelect: () => {
-          context.token = '';
-        },
-      },
-    ],
-    { positioning: { placement: 'bottom-end' } },
-  );
-
-  function shareLink() {
-    props.share().then((url) => {
-      navigator.clipboard.writeText(url).then(() => {
-        setCopy(true);
-        setTimeout(setCopy, 750, false);
-      });
-    });
-  }
-
   return (
     <header class={headerStyles}>
-      <A href={`/${context.profile()}`}>
-        <img src={logo} alt="solid-js logo" class={css({ w: 8 })} />
-      </A>
-      {resolved() || (
-        <h1 class={titleStyles}>
-          Solid<b>-Checker</b> Playground
-        </h1>
-      )}
-      <div class={css({ ml: 'auto', display: 'flex', alignItems: 'center', gap: 2 })}>
+      <img src={logo} alt="solid-js logo" class={css({ w: 8, flexShrink: 0 })} />
+      <h1 class={titleStyles}>
+        <Show when={isMobile()} fallback={<>Solid-Checker Playground</>}>
+          Solid-Checker
+        </Show>
+      </h1>
+
+      <div class={css({ ml: 'auto', display: 'flex', alignItems: 'center', gap: 2, minW: 0 })}>
         <Show
           when={isMobile()}
           fallback={
             <div class={desktopMenuList}>
-              <HeaderMenuItems
-                copy={copy()}
-                shareLink={shareLink}
-                showOnMobile={false}
-                solidVersion={props.solidVersion}
-                onSolidVersionChange={props.onSolidVersionChange}
-                exampleRule={props.exampleRule}
-                onExampleChange={props.onExampleChange}
-                exampleVariant={props.exampleVariant}
-                onExampleVariantToggle={props.onExampleVariantToggle}
-              />
+              <HeaderMenuItems {...props} showOnMobile={false} />
             </div>
           }
         >
           <Show when={mobileApi().open}>
             <div {...mobileApi().getPositionerProps()}>
               <div {...mobileApi().getContentProps()} class={mobileMenuPanel}>
-                <HeaderMenuItems
-                  copy={copy()}
-                  shareLink={shareLink}
-                  showOnMobile
-                  solidVersion={props.solidVersion}
-                  onSolidVersionChange={props.onSolidVersionChange}
-                  exampleRule={props.exampleRule}
-                  onExampleChange={props.onExampleChange}
-                  exampleVariant={props.exampleVariant}
-                  onExampleVariantToggle={props.onExampleVariantToggle}
-                />
+                <HeaderMenuItems {...props} showOnMobile />
               </div>
             </div>
           </Show>
@@ -198,34 +130,12 @@ export const Header: ParentComponent<{
             <span class={css({ srOnly: true })}>Show menu</span>
           </Button>
         </Show>
-
-        <div class={profileButtonStyles}>
-          <Show
-            when={context.user()?.avatar}
-            fallback={
-              <a
-                class={loginLink}
-                href={`${API}/auth/login?redirect=${window.location.origin}/login?auth=success`}
-                rel="external"
-              >
-                Login
-              </a>
-            }
-          >
-            <button {...profile.api().getTriggerProps()}>
-              <img crossOrigin="anonymous" src={context.user()?.avatar} class={css({ h: 8, w: 8, rounded: 'full' })} />
-            </button>
-            <profile.Content />
-          </Show>
-        </div>
       </div>
     </header>
   );
 };
 
-const HeaderMenuItems: ParentComponent<{
-  copy: boolean;
-  shareLink: () => void;
+const HeaderMenuItems: Component<{
   showOnMobile: boolean;
   solidVersion?: string;
   onSolidVersionChange?: (version: string) => void;
@@ -238,30 +148,6 @@ const HeaderMenuItems: ParentComponent<{
   const mobileBtn = () => (props.showOnMobile ? menuButtonOnMobile : '');
   return (
     <>
-      <Button onClick={context.toggleDark} class={mobileBtn()} title="Toggle dark mode">
-        <Show when={context.dark()} fallback={<Icon path={moon} class={css({ h: 6 })} />}>
-          <Icon path={sun} class={css({ h: 6 })} />
-        </Show>
-        <span class={css({ fontSize: 'sm', md: { srOnly: true } })}>{context.dark() ? 'Light' : 'Dark'} mode</span>
-      </Button>
-
-      <Show when={context.tabs()}>
-        <Button onClick={() => exportToZip(unwrap(context.tabs())!)} class={mobileBtn()} title="Export to Zip">
-          <Icon path={arrowDownTray} class={css({ h: 6, m: 0 })} />
-          <span class={css({ fontSize: 'sm', md: { srOnly: true } })}>Export to Zip</span>
-        </Button>
-      </Show>
-
-      <Show when={props.onSolidVersionChange}>
-        {(onChange) => (
-          <VersionDropdown
-            version={props.solidVersion ?? ''}
-            onChange={(v) => onChange()(v)}
-            showOnMobile={props.showOnMobile}
-          />
-        )}
-      </Show>
-
       <Show when={props.onExampleChange}>
         {(onChange) => (
           <ExampleSelect
@@ -281,27 +167,30 @@ const HeaderMenuItems: ParentComponent<{
         />
       </Show>
 
+      <Show when={props.onSolidVersionChange}>
+        {(onChange) => (
+          <VersionDropdown
+            version={props.solidVersion ?? ''}
+            onChange={(v) => onChange()(v)}
+            showOnMobile={props.showOnMobile}
+          />
+        )}
+      </Show>
+
       <ZoomDropdown showMenu={props.showOnMobile} />
 
-      <Button
-        onClick={props.shareLink}
-        class={cx(
-          mobileBtn(),
-          props.copy ? css({ color: 'green.100' }) : css({ opacity: 0.8, _hover: { opacity: 1 } }),
-        )}
-        title="Share with a minified link"
-      >
-        <Icon class={css({ h: 6 })} path={props.copy ? link : share} />
-        <span class={css({ fontSize: 'sm', md: { srOnly: true } })}>
-          {props.copy ? 'Copied to clipboard' : 'Share'}
-        </span>
+      <Button onClick={context.toggleDark} class={mobileBtn()} title="Toggle dark mode">
+        <Show when={context.dark()} fallback={<Icon path={moon} class={css({ h: 6 })} />}>
+          <Icon path={sun} class={css({ h: 6 })} />
+        </Show>
+        <span class={css({ fontSize: 'sm', md: { srOnly: true } })}>{context.dark() ? 'Light' : 'Dark'} mode</span>
       </Button>
 
       <LinkButton
-        href="https://github.com/solidjs/solid-playground"
+        href="https://github.com/yumemi-thomas/solid-checker"
         target="_blank"
         class={cx(mobileBtn(), css({ cursor: 'alias' }))}
-        title="Github"
+        title="solid-checker on GitHub"
       >
         <Icon
           viewBox="0 0 96 96"
@@ -318,7 +207,7 @@ const HeaderMenuItems: ParentComponent<{
             mini: false,
           }}
         />
-        <span class={css({ fontSize: 'sm', md: { srOnly: true } })}>Github</span>
+        <span class={css({ fontSize: 'sm', md: { srOnly: true } })}>GitHub</span>
       </LinkButton>
     </>
   );

@@ -4,8 +4,6 @@ import { eventBus, setEventBus } from './utils/serviceWorker';
 import { Update } from './components/update';
 import { useZoom } from 'solid-repl/src/hooks/useZoom';
 import { Edit } from './pages/edit';
-import { Home } from './pages/home';
-import { Login } from './pages/login';
 import { AppContextProvider } from './context';
 import { css } from 'styled-system/css';
 
@@ -45,9 +43,7 @@ export const App = (): JSX.Element => {
           </AppContextProvider>
         )}
       >
-        <Route path={['/', '/:user/:repl']} component={Edit} />
-        <Route path="/:user" component={Home} />
-        <Route path="/login" component={Login} />
+        <Route path="*" component={Edit} />
       </Router>
 
       <Show when={eventBus()} children={<Update onDismiss={() => setEventBus(false)} />} />

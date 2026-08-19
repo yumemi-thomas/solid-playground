@@ -1,17 +1,14 @@
 import CompilerWorker from 'solid-repl/repl/compiler?worker';
 import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
-import { createEffect, createResource, createSignal, lazy, onCleanup, Show, Suspense } from 'solid-js';
-import { useLocation, useMatch, useNavigate, useParams } from '@solidjs/router';
-import { API, useAppContext } from '../context';
+import { createEffect, createSignal, lazy, Show } from 'solid-js';
+import { useLocation, useNavigate } from '@solidjs/router';
+import { useAppContext } from '../context';
 import { debounce } from '@solid-primitives/scheduled';
 import { decompressFromURL } from '@amoutonbrady/lz-string';
 import { defaultTabs, isSolidV2 } from 'solid-repl/src';
 import type { ReplStorage, Tab } from 'solid-repl';
-import type { APIRepl } from './home';
 import { Header } from '../components/header';
-import { Button } from 'solid-repl/src/components/ui/Button';
-import { useDialog } from 'solid-repl/src/components/ui/Dialog';
 import { css } from 'styled-system/css';
 import { normalizeSolidVersion } from '../solidVersion';
 import { EXAMPLE_FILE, OTHER_VARIANT, dialectFor, findExample, loadExample, type ExampleVariant } from '../examples';
@@ -47,24 +44,6 @@ function safeRemove(key: string): void {
 
 const Repl = lazy(() => import('solid-repl/src/repl'));
 
-const titleInput = css({
-  flex: 1,
-  minW: 0,
-  maxW: 96,
-  px: 3,
-  py: 1.5,
-  rounded: 'md',
-  bg: 'transparent',
-  borderWidth: '1px',
-  borderColor: 'transparent',
-  transition: 'all',
-  _focus: { borderColor: 'solidc', outline: 'none' },
-});
-
-const spinner = css({ h: 12, w: 12, m: 'auto', color: 'neutral.500', animation: 'spin 1s linear infinite' });
-
-const dialogActions = css({ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 });
-
 const exampleErrorStyles = css({ px: 4, py: 2, fontSize: 'sm', color: 'red.700', _dark: { color: 'red.300' } });
 
 interface InternalTab extends Tab {
@@ -72,20 +51,16 @@ interface InternalTab extends Tab {
   _name: string;
 }
 
+const SCRATCHPAD_KEY = 'scratchpad';
+
 export const Edit = () => {
-  const scratchpad = useMatch(() => '/');
   const compiler = new CompilerWorker();
   const formatter = new FormatterWorker();
   const linter = new LinterWorker();
 
-  const params = useParams<{ user: string; repl: string }>();
   const context = useAppContext()!;
   const navigate = useNavigate();
   const location = useLocation();
-
-  let disableFetch: true | undefined;
-
-  let readonly = () => !scratchpad() && context.profile() != params.user && !localStorage.getItem(params.repl);
 
   for (const key of Object.keys(localStorage)) {
     if (key.startsWith('solid-repl:editorState:file:///')) safeRemove(key);
@@ -102,22 +77,6 @@ export const Edit = () => {
     },
   };
 
-  createEffect(() => {
-    if (!scratchpad()) return;
-    if (location.query.hash) {
-      navigate(`/anonymous/${location.query.hash}`);
-    } else if (location.hash) {
-      const initialTabs = parseHash(location.hash.slice(1), defaultTabs);
-      localStorage.setItem(
-        'scratchpad',
-        JSON.stringify({
-          files: initialTabs.map((x) => ({ name: x.name, content: x.source })),
-        }),
-      );
-      navigate('/', { replace: true });
-    }
-  });
-
   const mapTabs = (toMap: (Tab | InternalTab)[]): InternalTab[] =>
     toMap.map((tab) => {
       if ('_source' in tab) return tab;
@@ -128,7 +87,7 @@ export const Edit = () => {
         },
         set name(name: string) {
           this._name = name;
-          updateRepl();
+          persist();
         },
         _source: tab.source,
         get source() {
@@ -136,7 +95,7 @@ export const Edit = () => {
         },
         set source(source: string) {
           this._source = source;
-          updateRepl();
+          persist();
         },
       };
     });
@@ -144,9 +103,47 @@ export const Edit = () => {
   const [tabs, trueSetTabs] = createSignal<InternalTab[]>([]);
   const setTabs = (tabs: (Tab | InternalTab)[]) => trueSetTabs(mapTabs(tabs));
 
+  const persist = debounce(() => {
+    writeJson(SCRATCHPAD_KEY, { files: tabs().map((tab) => ({ name: tab.name, content: tab.source })) });
+  }, 10);
+
   const storedVersion = normalizeSolidVersion(localStorage.getItem('solidVersion'));
   const [solidVersion, setSolidVersion] = createSignal(storedVersion);
-  const [resolvedSolidVersion, setResolvedSolidVersion] = createSignal(storedVersion);
+
+  // Which example the tab currently holds, and which of its two variants,
+  // remembered so a reload does not show an example's code next to an empty
+  // picker or a button labelled for the wrong direction. Any hand edit
+  // invalidates both.
+  const EXAMPLE_KEY = 'solid-playground:example';
+  const storedExample = readJson<{ rule: string; variant: ExampleVariant }>(EXAMPLE_KEY);
+  const restoredExample = storedExample && findExample(storedVersion, storedExample.rule) ? storedExample : undefined;
+
+  const [exampleRule, trueSetExampleRule] = createSignal(restoredExample?.rule ?? '');
+  const [exampleVariant, trueSetExampleVariant] = createSignal<ExampleVariant>(restoredExample?.variant ?? 'incorrect');
+
+  const rememberExample = (rule: string, variant: ExampleVariant) => {
+    trueSetExampleRule(rule);
+    trueSetExampleVariant(variant);
+    if (rule) writeJson(EXAMPLE_KEY, { rule, variant });
+    else safeRemove(EXAMPLE_KEY);
+  };
+
+  const [exampleError, setExampleError] = createSignal('');
+  // A fresh array each load, so re-picking the same rule re-reveals the file.
+  const [exampleOpenFiles, setExampleOpenFiles] = createSignal<string[]>([]);
+
+  // A shared link carries its files in the hash. Read it once and clear it, so a
+  // later reload shows the working copy rather than resetting to the link.
+  const openingTabs = (): Tab[] => {
+    const hash = location.hash.slice(1) || (typeof location.query.hash === 'string' ? location.query.hash : '');
+    if (hash) {
+      const fromHash = parseHash<Tab[] | undefined>(hash, undefined);
+      if (fromHash?.length) return fromHash;
+    }
+    const saved = readJson<{ files?: { name: string; content: string }[] }>(SCRATCHPAD_KEY);
+    if (saved?.files?.length) return saved.files.map((file) => ({ name: file.name, source: file.content }));
+    return defaultTabs;
+  };
 
   const migrateTabs = (version: string | undefined) => {
     const isV2 = isSolidV2(version);
@@ -165,26 +162,23 @@ export const Edit = () => {
     if (changed) trueSetTabs(current.slice());
   };
 
-  // Which example the tab currently holds, and which of its two variants,
-  // remembered so a reload does not show an example's code next to an empty
-  // picker or a button labelled for the wrong direction. Any hand edit
-  // invalidates both.
-  const EXAMPLE_KEY = 'solid-playground:example';
-  const stored = readJson<{ rule: string; variant: ExampleVariant }>(EXAMPLE_KEY);
-  const restored = stored && findExample(storedVersion, stored.rule) ? stored : undefined;
+  setTabs(openingTabs());
+  // The stock scratchpad is written for 1.x, so on a 2.0 session its
+  // `solid-js/web` import is a real finding (SC9001) before the reader has typed
+  // anything. Bring whatever we open in line with the selected dialect.
+  migrateTabs(solidVersion());
+  persist();
 
-  const [exampleRule, trueSetExampleRule] = createSignal(restored?.rule ?? '');
-  const [exampleVariant, trueSetExampleVariant] = createSignal<ExampleVariant>(restored?.variant ?? 'incorrect');
+  createEffect(() => {
+    if (location.hash || location.query.hash) navigate('/', { replace: true });
+  });
 
-  const rememberExample = (rule: string, variant: ExampleVariant) => {
-    trueSetExampleRule(rule);
-    trueSetExampleVariant(variant);
-    if (rule) writeJson(EXAMPLE_KEY, { rule, variant });
-    else safeRemove(EXAMPLE_KEY);
+  const reset = () => {
+    setTabs(mapTabs(defaultTabs));
+    rememberExample('', 'incorrect');
+    // Persistence hangs off the per-tab source setter, which this bypasses.
+    persist();
   };
-  const [exampleError, setExampleError] = createSignal('');
-  // A fresh array each load, so re-picking the same rule re-reveals the file.
-  const [exampleOpenFiles, setExampleOpenFiles] = createSignal<string[]>([]);
 
   const showExample = (version: string, rule: string, variant: ExampleVariant) =>
     loadExample(version, rule, variant).then(
@@ -195,7 +189,7 @@ export const Edit = () => {
         // the open editor follows it.
         setTabs([{ name: EXAMPLE_FILE, source }]);
         setExampleOpenFiles([EXAMPLE_FILE]);
-        updateRepl();
+        persist();
       },
       (error: unknown) => setExampleError(error instanceof Error ? error.message : String(error)),
     );
@@ -203,7 +197,6 @@ export const Edit = () => {
   const changeSolidVersion = (version: string) => {
     const selected = normalizeSolidVersion(version);
     setSolidVersion(selected);
-    setResolvedSolidVersion(selected);
     localStorage.setItem('solidVersion', selected);
     migrateTabs(selected);
 
@@ -212,7 +205,7 @@ export const Edit = () => {
     // The catalogs overlap by defect, not by rule name. Where the other dialect
     // has the same rule, show its own example rather than analysing this one's
     // code under the wrong dialect; where it does not, only the selection is
-    // dropped and the tabs are left alone.
+    // dropped and the tab is left alone.
     const bare = rule.replace(/^v1\//, '');
     const equivalent = dialectFor(selected) === 'solid-v1' ? `v1/${bare}` : bare;
     if (findExample(selected, equivalent)) void showExample(selected, equivalent, exampleVariant());
@@ -233,139 +226,10 @@ export const Edit = () => {
     if (rule) void showExample(solidVersion(), rule, OTHER_VARIANT[exampleVariant()]);
   };
 
-  context.setTabs(tabs);
-  onCleanup(() => context.setTabs(undefined));
-
-  const [resource, { mutate }] = createResource<APIRepl, { repl: string | undefined; scratchpad: boolean }>(
-    () => ({ repl: params.repl, scratchpad: !!scratchpad() }),
-    async ({ repl, scratchpad }): Promise<APIRepl> => {
-      if (disableFetch) {
-        disableFetch = undefined;
-        if (resource.latest) return resource.latest;
-      }
-
-      let output: APIRepl;
-      if (scratchpad) {
-        const myScratchpad = localStorage.getItem('scratchpad');
-        if (!myScratchpad) {
-          output = {
-            files: defaultTabs.map((x) => ({ name: x.name, content: x.source })),
-          } as APIRepl;
-          localStorage.setItem('scratchpad', JSON.stringify(output));
-        } else {
-          output = JSON.parse(myScratchpad);
-        }
-      } else {
-        output = await fetch(`${API}/repl/${repl}`, {
-          headers: { authorization: context.token ? `Bearer ${context.token}` : '' },
-        }).then((r) => r.json());
-      }
-
-      setTabs(output.files.map((x) => ({ name: x.name, source: x.content })));
-
-      return output;
-    },
-  );
-
-  const reset = () => {
-    setTabs(mapTabs(defaultTabs));
-    // The persistence hook hangs off the per-tab source setter, which this bypasses.
-    updateRepl();
-  };
-
-  const publishScratchpad = async (title: string) => {
-    const newRepl = {
-      title,
-      public: true,
-      labels: [] as string[],
-      version: '1.0',
-      files: tabs().map((x) => ({ name: x.name, content: x.source })),
-    };
-    const response = await fetch(`${API}/repl`, {
-      method: 'POST',
-      headers: {
-        'authorization': context.token ? `Bearer ${context.token}` : '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newRepl),
-    });
-    if (response.status >= 400) throw new Error(response.statusText);
-
-    const { id, write_token } = await response.json();
-    if (write_token) {
-      localStorage.setItem(id, write_token);
-      const repls = localStorage.getItem('repls');
-      localStorage.setItem('repls', JSON.stringify(repls ? [...JSON.parse(repls), id] : [id]));
-    }
-    mutate(() => ({
-      id,
-      title: newRepl.title,
-      labels: newRepl.labels,
-      files: newRepl.files,
-      version: newRepl.version,
-      public: newRepl.public,
-      size: 0,
-      created_at: '',
-    }));
-    const url = `/${context.profile()}/${id}`;
-    disableFetch = true;
-    navigate(url);
-    return url;
-  };
-
-  const [forkPromptFor, setForkPromptFor] = createSignal<string | null>(null);
-  const [forkDeclinedFor, setForkDeclinedFor] = createSignal<string | null>(null);
-  const forkPromptOpen = () => forkPromptFor() === params.repl;
-  const forkDeclined = () => forkDeclinedFor() === params.repl;
-
   const onUserEdit = () => {
     // The tab no longer holds the example as shipped, so stop claiming it does.
     if (exampleRule()) rememberExample('', 'incorrect');
-    if (!readonly() || forkDeclined()) return;
-    setForkPromptFor(params.repl);
   };
-
-  const forkDialog = useDialog({
-    open: forkPromptOpen,
-    onOpenChange: (open) => {
-      if (!open) setForkPromptFor(null);
-    },
-  });
-
-  const updateRepl = debounce(
-    () => {
-      if (readonly()) return;
-      const files = tabs().map((x) => ({ name: x.name, content: x.source }));
-
-      if (scratchpad()) {
-        localStorage.setItem('scratchpad', JSON.stringify({ files }));
-      }
-
-      const repl = resource.latest;
-      if (!repl) return;
-
-      const loggedIn = context.token && params.user && context.profile() == params.user;
-
-      if (loggedIn || localStorage.getItem(params.repl)) {
-        fetch(`${API}/repl/${params.repl}`, {
-          method: 'PUT',
-          headers: {
-            'authorization': context.token ? `Bearer ${context.token}` : '',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...(localStorage.getItem(params.repl) ? { write_token: localStorage.getItem(params.repl) } : {}),
-            title: repl.title,
-            version: repl.version,
-            public: repl.public,
-            labels: repl.labels,
-            files,
-          }),
-        });
-      }
-    },
-    scratchpad() ? 10 : 1000,
-  );
 
   return (
     <>
@@ -376,98 +240,24 @@ export const Edit = () => {
         onExampleChange={changeExample}
         exampleVariant={exampleVariant()}
         onExampleVariantToggle={toggleExampleVariant}
-        fork={() => {}}
-        share={async () => {
-          if (scratchpad()) {
-            const url = await publishScratchpad(`${context.user()?.display || 'Anonymous'}'s Scratchpad`);
-            return `${window.location.origin}${url}`;
-          } else if (readonly()) {
-            const original = resource.latest;
-            const url = await publishScratchpad(original?.title ? `${original.title} (fork)` : 'Forked Repl');
-            return `${window.location.origin}${url}`;
-          } else {
-            return window.location.href;
-          }
-        }}
-      >
-        <Show when={resource() && (resource()?.title || (scratchpad() && context.token))}>
-          <input
-            class={titleInput}
-            value={resource()?.title ?? ''}
-            placeholder={scratchpad() ? 'Name this repl to save it' : ''}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') e.currentTarget.blur();
-            }}
-            onChange={(e) => {
-              const title = e.currentTarget.value;
-              if (scratchpad() || readonly()) {
-                if (title) publishScratchpad(title);
-              } else {
-                mutate((x) => x && { ...x, title });
-                updateRepl();
-              }
-            }}
-          />
-        </Show>
-      </Header>
+      />
       <Show when={exampleError()}>
         {(message) => <p class={exampleErrorStyles}>Could not load that example: {message()}</p>}
       </Show>
-      <Suspense
-        fallback={
-          <svg class={spinner} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class={css({ opacity: 0.25 })} cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path
-              class={css({ opacity: 0.75 })}
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        }
-      >
-        <Show when={resource()}>
-          <Repl
-            compiler={compiler}
-            formatter={formatter}
-            linter={linter}
-            version={resolvedSolidVersion() || undefined}
-            dark={context.dark()}
-            tabs={tabs()}
-            setTabs={setTabs}
-            openFiles={exampleOpenFiles()}
-            reset={reset}
-            onUserEdit={onUserEdit}
-            storage={replStorage}
-            id="repl"
-          />
-        </Show>
-      </Suspense>
-      <forkDialog.Root>
-        <p class={css({ fontWeight: 'semibold' })}>Fork this repl?</p>
-        <p class={css({ mt: 2, fontSize: 'sm', opacity: 0.8 })}>
-          You're editing someone else's repl. Fork it to a new copy you can save.
-        </p>
-        <div class={dialogActions}>
-          <Button
-            onClick={() => {
-              setForkPromptFor(null);
-              setForkDeclinedFor(params.repl);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              setForkPromptFor(null);
-              const original = resource.latest;
-              publishScratchpad(original?.title ? `${original.title} (fork)` : 'Forked Repl');
-            }}
-          >
-            Fork
-          </Button>
-        </div>
-      </forkDialog.Root>
+      <Repl
+        compiler={compiler}
+        formatter={formatter}
+        linter={linter}
+        version={solidVersion()}
+        dark={context.dark()}
+        tabs={tabs()}
+        setTabs={setTabs}
+        openFiles={exampleOpenFiles()}
+        reset={reset}
+        onUserEdit={onUserEdit}
+        storage={replStorage}
+        id="repl"
+      />
     </>
   );
 };
