@@ -64,6 +64,46 @@ const moduleRoots = searchRoots.flatMap((root) => [
   resolve(root, 'packages/solid-repl/node_modules'),
 ]);
 
+interface Manifest {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+}
+
+function readManifest(path: string): Manifest | undefined {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8')) as Manifest;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The version of a dependency as this workspace declares it, checked across the
+ * root manifest *and* the workspace packages.
+ *
+ * This matters for `solid-js`: only `packages/playground/package.json` pins the
+ * 1.x line, so consulting the root manifest alone found no version at all. The
+ * store lookup below then fell back to the newest matching entry and handed the
+ * `solid-v1` dialect `solid-js@2.0.0-rc.0` — every 1.x file came back with a
+ * stale-contract SC9005 and nothing else could be certified. It only showed up
+ * once deployed, because locally the direct search finds
+ * `packages/playground/node_modules/solid-js` before the store is consulted.
+ */
+function declaredVersion(dependencyName: string) {
+  const manifestPaths = [
+    resolve(repositoryRoot, 'package.json'),
+    resolve(repositoryRoot, 'packages/playground/package.json'),
+    resolve(repositoryRoot, 'packages/solid-repl/package.json'),
+  ];
+  for (const path of manifestPaths) {
+    const manifest = readManifest(path);
+    const spec = manifest?.dependencies?.[dependencyName] ?? manifest?.devDependencies?.[dependencyName];
+    const version = spec?.match(/(?:^|@)(\d+\.\d+\.\d+(?:-[^/]+)?)/)?.[1];
+    if (version) return version;
+  }
+  return undefined;
+}
+
 function packagePath(packageName: string, sourceName = packageName) {
   const directSource = moduleRoots.map((root) => resolve(root, sourceName)).find((candidate) => existsSync(candidate));
   if (directSource) return directSource;
@@ -73,13 +113,11 @@ function packagePath(packageName: string, sourceName = packageName) {
   const storeName = sourceName === 'solid-js-v2' ? 'solid-js' : sourceName;
   const storePrefix =
     storeName.startsWith('@') && !storeName.includes('/') ? `${storeName}+` : `${storeName.replace('/', '+')}@`;
-  const dependencyName = packageName === '@solidjs' ? '@solidjs/web' : packageName;
-  const manifest = JSON.parse(readFileSync(resolve(repositoryRoot, 'package.json'), 'utf8')) as {
-    dependencies?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-  };
-  const dependencySpec = manifest.dependencies?.[dependencyName] ?? manifest.devDependencies?.[dependencyName];
-  const preferredVersion = dependencySpec?.match(/(?:^|@)(\d+\.\d+\.\d+(?:-[^/]+)?)/)?.[1];
+  // Keyed on the requested *source* name, not the link name: the 2.0 dialect asks
+  // for `solid-js-v2` (declared as `npm:solid-js@2.0.0-rc.0`) and links it as
+  // `solid-js`, so looking the link name up would pin it to the 1.x version.
+  const dependencyName = sourceName === '@solidjs' ? '@solidjs/web' : sourceName;
+  const preferredVersion = declaredVersion(dependencyName);
   for (const moduleRoot of moduleRoots) {
     const storeRoot = resolve(moduleRoot, '.pnpm');
     if (!existsSync(storeRoot)) continue;
@@ -99,6 +137,29 @@ function packagePath(packageName: string, sourceName = packageName) {
   }
 
   throw new Error(`Could not find installed package ${sourceName}.`);
+}
+
+/**
+ * The dialect decides which contract the checker applies, so linking the other
+ * major silently turns every finding into a stale-contract obligation instead of
+ * an answer. Refuse rather than analyse against the wrong runtime.
+ */
+function assertSolidMajor(dialect: Dialect, solidPath: string) {
+  const version = readManifestVersion(resolve(solidPath, 'package.json'));
+  const wanted = dialect === 'solid-v2' ? '2' : '1';
+  if (version && version.split('.')[0] === wanted) return;
+  throw new Error(
+    `resolved solid-js@${version ?? 'unknown'} for dialect ${dialect}, which expects ${wanted}.x. ` +
+      'The lint boundary would analyse against the wrong Solid runtime.',
+  );
+}
+
+function readManifestVersion(path: string) {
+  try {
+    return (JSON.parse(readFileSync(path, 'utf8')) as { version?: string }).version;
+  } catch {
+    return undefined;
+  }
 }
 
 function packageFile(packageName: string, fileName: string) {
@@ -266,7 +327,9 @@ export async function runPlaygroundLint(request: LintRequest): Promise<LintResul
       }),
     );
     for (const packageName of ['solid-checker', '@solidjs']) symlinkPackage(temporaryDirectory, packageName);
-    symlinkPackage(temporaryDirectory, 'solid-js', request.dialect === 'solid-v2' ? 'solid-js-v2' : 'solid-js');
+    const solidSource = request.dialect === 'solid-v2' ? 'solid-js-v2' : 'solid-js';
+    symlinkPackage(temporaryDirectory, 'solid-js', solidSource);
+    assertSolidMajor(request.dialect, packagePath('solid-js', solidSource));
 
     // The production path intentionally keeps checker out of Oxlint's
     // jsPlugins bridge. Oxlint's native rules and solid-checker then run as
