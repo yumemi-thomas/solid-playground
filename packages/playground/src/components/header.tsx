@@ -27,14 +27,19 @@ const headerStyles = css({
   _dark: { bg: 'neutral.950' },
 });
 
-// The title used to set `lineHeight: 0` so the tracked-out uppercase text sat
-// flush with the logo. Combined with wrapping that drew both lines on top of each
-// other on a narrow screen, and combined with `overflow: hidden` it clipped the
-// text away entirely. The flex row already centres it, so a normal line box is
-// all it needs; `nowrap` plus an ellipsis keeps it to one line at any width.
+// The title is set in tracked-out uppercase, which is wide: at the desktop size
+// the full name needs ~270px, more than a 375px header can spare next to the logo
+// and the menu button. Rather than dropping a word — which just reads as cut off
+// — the type tightens on a narrow screen so the whole name still fits, with the
+// ellipsis left as a last resort below that.
+//
+// Two things this must not do again: `lineHeight: 0` (it once collapsed the two
+// wrapped lines on top of each other, and clipped the text away entirely once
+// `overflow: hidden` was added), and wrapping (`nowrap` keeps it to one line).
 const titleStyles = css({
-  lineHeight: 1,
-  letterSpacing: 'widest',
+  lineHeight: 1.2,
+  fontSize: { base: 'xs', md: 'sm' },
+  letterSpacing: { base: 'wide', md: 'widest' },
   textTransform: 'uppercase',
   whiteSpace: 'nowrap',
   overflow: 'hidden',
@@ -95,11 +100,7 @@ export const Header: Component<{
   return (
     <header class={headerStyles}>
       <img src={logo} alt="solid-js logo" class={css({ w: 8, flexShrink: 0 })} />
-      <h1 class={titleStyles}>
-        <Show when={isMobile()} fallback={<>Solid-Checker Playground</>}>
-          Solid-Checker
-        </Show>
-      </h1>
+      <h1 class={titleStyles}>Solid-Checker Playground</h1>
 
       <div class={css({ ml: 'auto', display: 'flex', alignItems: 'center', gap: 2, minW: 0 })}>
         <Show
