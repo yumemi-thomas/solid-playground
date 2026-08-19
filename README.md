@@ -40,7 +40,10 @@ $ pnpm run build
 ```
 
 The Solid version menu defaults to Solid `2.0` (currently pinned to the
-published `2.0.0-rc.0` package) and only offers Solid `2.0` and `1.9.4`. The
+published `2.0.0-rc.0` package) and only offers Solid `2.0` and `1.9.14` — the
+1.x pin is the version the workspace installs and the version solid-checker's
+bundled 1.x contract is audited against, so the preview runtime, the import map,
+and the analysis all agree. The
 linter request turns that selection into an explicit
 `solid-v1` or `solid-v2` checker dialect.
 
