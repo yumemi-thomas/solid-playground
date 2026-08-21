@@ -1,8 +1,8 @@
-import { EXAMPLES_BY_DIALECT, exampleKey, type ExampleEntry } from './catalog';
+import { EXAMPLES_BY_DIALECT, type ExampleEntry } from './catalog';
 import { composeExample, type ExampleVariant } from './composeExample';
 import type { Dialect } from './types';
 
-export { EXAMPLES_BY_DIALECT, exampleKey, type ExampleEntry } from './catalog';
+export { EXAMPLES_BY_DIALECT, type ExampleEntry } from './catalog';
 export { OTHER_VARIANT, VARIANT_ACTION, composeExample, type ExampleVariant } from './composeExample';
 export type { Dialect } from './types';
 
@@ -17,7 +17,7 @@ const sources = import.meta.glob('../../examples/*/*/*.tsx', {
   import: 'default',
 }) as Record<string, () => Promise<string>>;
 
-/** The one file an example puts in the repl. Named so the preview pane resolves. */
+/** The primary file an example puts in the repl. Named so the preview pane resolves. */
 export const EXAMPLE_FILE = 'main.tsx';
 
 /** The dialect a Solid package selection analyses under. */
@@ -30,13 +30,16 @@ export function examplesFor(version: string | undefined): readonly ExampleEntry[
 }
 
 export function findExample(version: string | undefined, rule: string): ExampleEntry | undefined {
-  return examplesFor(version).find((entry) => exampleKey(entry) === rule);
+  return examplesFor(version).find((entry) => entry.rule === rule);
 }
 
 /** Groups an example list into the picker's `optgroup` order, keeping catalog order inside each. */
 export function groupExamples(entries: readonly ExampleEntry[]): Array<[string, ExampleEntry[]]> {
   const groups = new Map<string, ExampleEntry[]>();
+  const seenRules = new Set<string>();
   for (const entry of entries) {
+    if (seenRules.has(entry.rule)) continue;
+    seenRules.add(entry.rule);
     const group = groups.get(entry.category);
     if (group) group.push(entry);
     else groups.set(entry.category, [entry]);
@@ -45,18 +48,38 @@ export function groupExamples(entries: readonly ExampleEntry[]): Array<[string, 
 }
 
 /**
- * Loads one variant of one example as the single file to drop into the repl. The
- * header names the rule and points at the button that swaps to the other
- * variant, so the file is self-describing on its own.
+ * Loads the first case file for callers that only need one example. The
+ * playground uses loadExamples() so all cases for a rule open together.
  */
 export async function loadExample(version: string | undefined, rule: string, variant: ExampleVariant): Promise<string> {
+  return (await loadExamples(version, rule, variant))[0].source;
+}
+
+export interface LoadedExample {
+  name: string;
+  source: string;
+}
+
+/** Loads every case file belonging to one rule, preserving catalog order. */
+export async function loadExamples(
+  version: string | undefined,
+  rule: string,
+  variant: ExampleVariant,
+): Promise<LoadedExample[]> {
   const dialect = dialectFor(version);
-  const entry = findExample(version, rule);
-  if (!entry) throw new Error(`No ${dialect} example for ${rule}.`);
+  const entries = examplesFor(version).filter((entry) => entry.rule === rule);
+  if (!entries.length) throw new Error(`No ${dialect} example for ${rule}.`);
 
-  const path = `../../examples/${dialect}/${entry.dir}/${variant}.tsx`;
-  const load = sources[path];
-  if (!load) throw new Error(`Missing example file ${path}.`);
+  return Promise.all(
+    entries.map(async (entry, index) => {
+      const path = `../../examples/${dialect}/${entry.dir}/${variant}.tsx`;
+      const load = sources[path];
+      if (!load) throw new Error(`Missing example file ${path}.`);
 
-  return composeExample(entry, variant, await load());
+      return {
+        name: entry.file ?? (index === 0 ? EXAMPLE_FILE : `case-${index + 1}.tsx`),
+        source: composeExample(entry, variant, await load()),
+      };
+    }),
+  );
 }

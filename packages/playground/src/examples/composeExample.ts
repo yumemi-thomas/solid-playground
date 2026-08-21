@@ -32,6 +32,8 @@ function orientation(entry: ExampleEntry, variant: ExampleVariant): string {
 export function composeExample(entry: ExampleEntry, variant: ExampleVariant, source: string): string {
   const lines = [`// ${entry.code} · ${entry.rule} · ${entry.severity}`, '//', `// ${entry.summary}`];
 
+  if (entry.label) lines.push('//', `// Case: ${entry.label}`);
+
   if (variant === 'incorrect' && entry.alsoReports?.length) {
     lines.push(
       '//',

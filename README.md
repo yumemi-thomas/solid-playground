@@ -116,7 +116,8 @@ real `.tsx` files, one `incorrect.tsx` and one `correct.tsx` per case study, and
 their metadata lives in `packages/playground/src/examples/catalog.ts`. A rule
 can have several cases when the interesting part is semantic proof rather than
 syntax — for example, a local component named `Loading` is not Solid's actual
-loading boundary. They are
+loading boundary. Selecting a rule opens all of its case files together as
+editor tabs, while each case remains independently linted and typechecked. They are
 excluded from the project's own `tsc`, `oxlint`, and `oxfmt` runs, and checked
 by their own script instead:
 

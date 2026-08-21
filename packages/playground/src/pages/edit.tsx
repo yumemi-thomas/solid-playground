@@ -11,7 +11,7 @@ import type { ReplStorage, Tab } from 'solid-repl';
 import { Header } from '../components/header';
 import { css } from 'styled-system/css';
 import { normalizeSolidVersion } from '../solidVersion';
-import { EXAMPLE_FILE, OTHER_VARIANT, dialectFor, findExample, loadExample, type ExampleVariant } from '../examples';
+import { OTHER_VARIANT, dialectFor, findExample, loadExamples, type ExampleVariant } from '../examples';
 
 function parseHash<T>(hash: string, fallback: T): T {
   try {
@@ -181,14 +181,14 @@ export const Edit = () => {
   };
 
   const showExample = (version: string, rule: string, variant: ExampleVariant) =>
-    loadExample(version, rule, variant).then(
-      (source) => {
+    loadExamples(version, rule, variant).then(
+      (files) => {
         setExampleError('');
         rememberExample(rule, variant);
-        // One file, so swapping variants replaces this tab's source in place and
-        // the open editor follows it.
-        setTabs([{ name: EXAMPLE_FILE, source }]);
-        setExampleOpenFiles([EXAMPLE_FILE]);
+        // A rule can have several independent case files. Swapping variants
+        // replaces all of them together and opens the complete case set.
+        setTabs(files);
+        setExampleOpenFiles(files.map((file) => file.name));
         persist();
       },
       (error: unknown) => setExampleError(error instanceof Error ? error.message : String(error)),

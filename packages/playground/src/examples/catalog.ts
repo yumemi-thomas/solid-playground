@@ -1,12 +1,12 @@
 import type { Dialect } from './types';
 
 export interface ExampleEntry {
-  /** Optional unique picker key when several case studies exercise one rule. */
-  key?: string;
   /** Rule name exactly as the solid-checker catalog spells it. */
   rule: string;
-  /** Optional case-study label shown after the rule name in the picker. */
+  /** Optional case-study label included in the file header. */
   label?: string;
+  /** Optional editor filename for an additional case of the same rule. */
+  file?: string;
   /** Directory under `examples/<dialect>/` holding `incorrect.tsx` and `correct.tsx`. */
   dir: string;
   /** Stable diagnostic code the finding carries. */
@@ -35,10 +35,6 @@ const asyncV2 = 'Async';
 const directivesV2 = 'Directives';
 const shapesV2 = 'API shapes';
 const limitsV2 = 'Analysis limits (uncertifiable)';
-
-export function exampleKey(entry: ExampleEntry): string {
-  return entry.key ?? entry.rule;
-}
 
 export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
   {
@@ -155,9 +151,9 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     summary: 'A tracked async read has no Loading boundary, so the page stays empty until it settles.',
   },
   {
-    key: 'async-outside-loading-boundary-impostor',
     rule: 'async-outside-loading-boundary',
     label: 'async-outside-loading-boundary · impostor Loading component',
+    file: 'impostor-loading.tsx',
     dir: 'async-outside-loading-boundary-impostor',
     code: 'SC5003',
     severity: 'warning',
@@ -166,9 +162,9 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
       'A local component is named Loading but is not Solid’s loading boundary, so the nested async read remains unprotected.',
   },
   {
-    key: 'async-outside-loading-boundary-passthrough',
     rule: 'async-outside-loading-boundary',
     label: 'async-outside-loading-boundary · passthrough wrapper',
+    file: 'passthrough-wrapper.tsx',
     dir: 'async-outside-loading-boundary-passthrough',
     code: 'SC5003',
     severity: 'warning',
@@ -201,9 +197,9 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     summary: 'A computation marked sync: true receives an async compute function.',
   },
   {
-    key: 'sync-computation-received-async-promise-expression',
     rule: 'sync-computation-received-async',
     label: 'sync-computation-received-async · hidden Promise expression',
+    file: 'hidden-promise.tsx',
     dir: 'sync-computation-received-async-promise-expression',
     code: 'SC7002',
     severity: 'error',
@@ -211,9 +207,9 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     summary: 'The computation has no async keyword, but its inferred Promise result still contradicts sync: true.',
   },
   {
-    key: 'reactive-read-after-await-named-computation',
     rule: 'reactive-read-after-await',
     label: 'reactive-read-after-await · named async computation',
+    file: 'named-computation.tsx',
     dir: 'reactive-read-after-await-named-computation',
     code: 'SC1002',
     severity: 'error',
@@ -246,9 +242,9 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     summary: 'A server function receives an argument the plain transport cannot serialize.',
   },
   {
-    key: 'server-function-rich-argument-nested-type',
     rule: 'server-function-rich-argument',
     label: 'server-function-rich-argument · nested interface field',
+    file: 'nested-interface.tsx',
     dir: 'server-function-rich-argument-nested-type',
     code: 'SC7007',
     severity: 'error',
@@ -283,9 +279,9 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     checkerPreset: 'preferences',
   },
   {
-    key: 'prefer-for-nested-show',
     rule: 'prefer-for',
     label: 'prefer-for · list nested inside Show',
+    file: 'nested-show.tsx',
     dir: 'prefer-for-nested-show',
     code: 'SC8014',
     severity: 'error',
@@ -295,9 +291,9 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     checkerPreset: 'preferences',
   },
   {
-    key: 'components-return-once-typed-component',
     rule: 'components-return-once',
     label: 'components-return-once · typed Component value',
+    file: 'typed-component.tsx',
     dir: 'components-return-once-typed-component',
     code: 'SC1004',
     severity: 'error',
