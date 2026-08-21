@@ -3,10 +3,10 @@ packages:
 allowBuilds:
   esbuild: true
 minimumReleaseAgeExclude:
-  - '@solid-checker/binding-darwin-arm64@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0'
+  - '@solid-checker/binding-darwin-arm64@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0 || 0.4.0-beta.1'
   - '@solid-checker/binding-darwin-x64@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0'
-  - '@solid-checker/binding-linux-arm64-gnu@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0'
-  - '@solid-checker/binding-linux-x64-gnu@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0'
-  - '@solid-checker/binding-win32-x64-msvc@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0'
-  - solid-checker-wasm@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0
-  - solid-checker@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0
+  - '@solid-checker/binding-linux-arm64-gnu@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0 || 0.4.0-beta.1'
+  - '@solid-checker/binding-linux-x64-gnu@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0 || 0.4.0-beta.1'
+  - '@solid-checker/binding-win32-x64-msvc@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0 || 0.4.0-beta.1'
+  - solid-checker-wasm@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0 || 0.4.0-beta.1
+  - solid-checker@0.3.1-beta.2 || 0.3.1-beta.3 || 0.4.0-beta.0 || 0.4.0-beta.1

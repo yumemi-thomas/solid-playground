@@ -32,6 +32,7 @@ export interface CodemirrorTabsOptions {
   displayErrors: () => boolean;
   lintEnabled: () => boolean;
   lintVersion?: () => string | undefined;
+  lintRule?: () => string | undefined;
   formatter?: WorkerClient;
   linter?: WorkerClient;
   keyBindings?: KeyBinding[];
@@ -205,6 +206,7 @@ const buildLintExtension = (
           ? opts.linter?.tryRequest<LintResponse>('LINT', {
               code: view.state.doc.toString(),
               version: opts.lintVersion?.(),
+              rule: opts.lintRule?.(),
             })
           : Promise.resolve(undefined),
       ]);
@@ -246,6 +248,7 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
     const res = await opts.linter?.tryRequest<LintResponse>('FIX', {
       code: view.state.doc.toString(),
       version: opts.lintVersion?.(),
+      rule: opts.lintRule?.(),
     });
     if (res?.fixed && typeof res.output === 'string') replaceDoc(view, res.output);
   };

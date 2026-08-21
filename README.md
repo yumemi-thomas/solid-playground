@@ -9,7 +9,7 @@ Through it you can quickly discover what the Solid compiler will generate from y
 
 This checkout keeps the upstream Solid Playground UI and replaces its in-browser
 Solid linting with a Vite dev-server boundary. The boundary runs the published
-`solid-checker@0.4.0-beta.0` native binary alongside Oxlint's own rules; it does
+`solid-checker@0.4.0-beta.1` native binary alongside Oxlint's own rules; it does
 not load `eslint-plugin-solid` or `eslint-solid-standalone`.
 
 ## Scope: a linting playground
@@ -92,8 +92,8 @@ which also keeps its 7 MB `.wasm` out of the bundle.
 ## Rule examples
 
 The header carries a **Rule examples** select listing every rule in the
-`solid-checker` catalog for the currently selected Solid package — 37 rules
-under Solid 2.0, 42 under Solid 1.x — grouped the way `docs/rules/README.md`
+`solid-checker` catalog for the currently selected Solid package — 26 rules
+under Solid 2.0, 18 under Solid 1.x — grouped the way `docs/rules/README.md`
 groups them and labelled with each rule's `SCxxxx` code.
 
 Picking one loads a single `main.tsx` holding the code that reports the rule,
@@ -129,9 +129,9 @@ typings. So an example never claims a finding the checker does not actually
 produce.
 
 Where a defect genuinely belongs to more than one rule the entry declares the
-extra codes in `alsoReports`, and the header comment says so — `SC1004` always
-co-reports `SC1001`, for instance, because a component that returns
-conditionally also reads its condition untracked.
+extra codes in `alsoReports`, and the header comment says so. The beta.1
+catalog deliberately merges overlapping ownership, async, and package-contract
+findings so each example demonstrates one stable defect identity.
 
 A handful of rules cannot be reproduced by a single file, because they need a
 second package or a stale fact producer. Those are marked `standalone: false`,
@@ -174,9 +174,9 @@ rather than in the deployed UI.
 
 The repository includes a `vercel.json` configuration. Vercel builds the
 workspace with `pnpm build`, serves `packages/playground/dist`, preserves the
-SPA routes, and sends the cross-origin isolation headers required by the browser
-WASM fallback. The static deployment intentionally falls back from the local
-Vite lint endpoint to `solid-checker-wasm` in the browser.
+SPA routes, and sends the cross-origin isolation headers retained for the editor
+runtime. Linting remains server-bound; an unavailable endpoint is shown as an
+explicit “not analysed” diagnostic.
 
 ## Credits / Technologies used
 

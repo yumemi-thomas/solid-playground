@@ -249,6 +249,7 @@ export const Edit = () => {
         formatter={formatter}
         linter={linter}
         version={solidVersion()}
+        exampleRule={exampleRule()}
         dark={context.dark()}
         tabs={tabs()}
         setTabs={setTabs}

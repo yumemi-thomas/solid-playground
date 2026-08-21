@@ -34,6 +34,7 @@ declare module 'solid-repl/dist/repl' {
     tabs: Tab[];
     id: string;
     version?: string;
+    exampleRule?: string;
     hideDevtools?: boolean;
     setTabs: (tab: Tab[]) => void;
     /**

@@ -19,6 +19,8 @@ export interface LintRequest {
   code: string;
   dialect: Dialect;
   fix: boolean;
+  /** Selected catalog rule, used to enable opt-in preference examples. */
+  rule?: string;
 }
 
 export interface NormalizedDiagnostic {
@@ -295,11 +297,30 @@ function runLinter(temporaryDirectory: string, fix: boolean) {
   });
 }
 
-function runChecker(temporaryDirectory: string, dialect: Dialect) {
+function runChecker(temporaryDirectory: string, dialect: Dialect, rule?: string) {
   const executable = packageFile('solid-checker', 'bin/solid-checker.mjs');
+  const preference =
+    rule?.endsWith('prefer-classlist') || rule?.endsWith('prefer-for') || rule?.endsWith('prefer-show');
   return run(
     process.execPath,
-    [executable, '--project', resolve(temporaryDirectory, 'tsconfig.json'), '--format', 'json', '--dialect', dialect],
+    [
+      executable,
+      '--project',
+      resolve(temporaryDirectory, 'tsconfig.json'),
+      '--format',
+      'json',
+      '--dialect',
+      dialect,
+      '--runtime-target',
+      'browser',
+      '--runtime-build',
+      'development',
+      '--runtime-condition',
+      'browser',
+      '--runtime-condition',
+      'import',
+      ...(preference ? ['--preset', 'preferences'] : []),
+    ],
     { cwd: temporaryDirectory, env: { ...process.env, SOLID_CHECKER_DAEMON: '0' } },
   );
 }
@@ -341,8 +362,11 @@ export async function runPlaygroundLint(request: LintRequest): Promise<LintResul
     // and analyse what Oxlint left behind.
     const engine = 'oxlint';
     const [lint, checker] = request.fix
-      ? [await runLinter(temporaryDirectory, true), await runChecker(temporaryDirectory, request.dialect)]
-      : await Promise.all([runLinter(temporaryDirectory, false), runChecker(temporaryDirectory, request.dialect)]);
+      ? [await runLinter(temporaryDirectory, true), await runChecker(temporaryDirectory, request.dialect, request.rule)]
+      : await Promise.all([
+          runLinter(temporaryDirectory, false),
+          runChecker(temporaryDirectory, request.dialect, request.rule),
+        ]);
 
     if (!lint.stdout.trim() && lint.stderr.trim()) {
       throw new Error(`${engine} failed: ${lint.stderr.trim()}`);
@@ -410,6 +434,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       code: body.code,
       dialect: body.dialect as 'solid-v1' | 'solid-v2',
       fix: body.fix === true,
+      rule: typeof body.rule === 'string' ? body.rule : undefined,
     });
     response.status(200).json(result);
   } catch (error) {

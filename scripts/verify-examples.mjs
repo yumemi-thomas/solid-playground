@@ -97,19 +97,21 @@ async function checkEntry(dialect, entry, declared, typeErrors) {
         failures.push(`${dialect} ${entry.rule}: missing ${kind}.tsx`);
         continue;
       }
-      const typeProblems = typeErrors.get(file);
-      const typeErrorsExpected = entry.alsoTypeError === true && kind === 'incorrect';
-      if (typeProblems && !typeErrorsExpected) {
-        failures.push(`${dialect} ${entry.rule} ${kind}.tsx: does not typecheck\n    ${typeProblems.join('\n    ')}`);
-      }
-      if (!typeProblems && typeErrorsExpected) {
-        failures.push(`${dialect} ${entry.rule} incorrect.tsx: alsoTypeError is set but tsc is silent`);
+      if (!skipTypes) {
+        const typeProblems = typeErrors.get(file);
+        const typeErrorsExpected = entry.alsoTypeError === true && kind === 'incorrect';
+        if (typeProblems && !typeErrorsExpected) {
+          failures.push(`${dialect} ${entry.rule} ${kind}.tsx: does not typecheck\n    ${typeProblems.join('\n    ')}`);
+        }
+        if (!typeProblems && typeErrorsExpected) {
+          failures.push(`${dialect} ${entry.rule} incorrect.tsx: alsoTypeError is set but tsc is silent`);
+        }
       }
 
       // Lint the composition the playground actually loads — header included —
       // so the header can never introduce or mask a finding.
       const code = composeExample(entry, kind, readFileSync(file, 'utf8'));
-      const result = await runPlaygroundLint({ code, dialect, fix: false });
+      const result = await runPlaygroundLint({ code, dialect, fix: false, rule: entry.rule });
       checked += 1;
       const native = result.diagnostics.filter((d) => d.ruleId !== 'solid-checker/certification');
       const codes = result.diagnostics

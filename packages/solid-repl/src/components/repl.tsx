@@ -163,6 +163,7 @@ export const Repl: ReplProps = (props) => {
     displayErrors,
     lintEnabled: () => true,
     lintVersion: () => props.version,
+    lintRule: () => props.exampleRule,
     formatter,
     linter,
     keyBindings: keyBindingsOf(commands),
