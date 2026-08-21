@@ -96,16 +96,16 @@ The header carries a **Rule examples** select listing every rule in the
 under Solid 2.0, 18 under Solid 1.x — grouped the way `docs/rules/README.md`
 groups them and labelled with each rule's `SCxxxx` code.
 
-Picking one loads a single `main.tsx` holding the code that reports the rule,
-under a header comment naming the rule, its code, its severity, and what the
-defect is. A **Resolve** button then appears beside the select: it swaps the same
-file to the version written so the rule stays silent, and turns into
-**Unresolve** to swap back. Both the selected rule and the variant on screen
-survive a reload, and editing the file by hand drops the selection, since the
-tab no longer holds the example as shipped. Switching the Solid version reloads
-the equivalent rule from the other catalog (`no-direct-mutation` ⇄
-`v1/no-direct-mutation`) rather than analysing one dialect's code under the
-other.
+Picking one opens the complete case set for that rule as editor tabs. The first
+file is `main.tsx`; additional files have names such as `typed-component.tsx` or
+`partial-coverage.tsx`. Each has a header comment naming the rule, its code, its
+severity, and what that case proves. A **Resolve** button then swaps every case
+file to its matching fixed version, and turns into **Unresolve** to swap back.
+Both the selected rule and the variant on screen survive a reload, and editing
+any case file by hand drops the selection, since the tabs no longer hold the
+examples as shipped. Switching the Solid version reloads the equivalent rule
+from the other catalog (`no-direct-mutation` ⇄ `v1/no-direct-mutation`) rather
+than analysing one dialect's code under the other.
 
 Most examples export components instead of mounting one, so the preview pane
 stays empty — the point of an example is the diagnostic in the editor, not a
@@ -129,9 +129,10 @@ The extra case studies are intentionally semantic: they hide the important
 fact behind a type alias, a component value, a wrapper, or an expression whose
 result is only known from TypeScript. That is where a syntax-only lint rule
 would either miss the bug or mistake a same-named component for a framework
-primitive. The examples include a fake `Loading`, a typed passthrough wrapper,
-a `Promise` hidden behind `Promise.resolve`, a `Date` nested in a server
-function interface, and a reactive list nested inside `Show`.
+primitive. The examples include a fake or partial `Loading`, a typed
+passthrough wrapper, a named Promise-returning helper, a `Date`, `Map`, and
+`RegExp` nested in server-function payloads, direct store index writes, leaf
+owner scheduler violations, and filtered reactive lists rendered in fragments.
 
 For every catalog entry that verifier composes the file exactly as the
 playground does — header comment included — and then asserts that the incorrect
