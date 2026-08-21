@@ -538,6 +538,61 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
       'A reactive ternary has both branches but still recreates the conditional region instead of using an explicit Show boundary.',
     checkerPreset: 'preferences',
   },
+  {
+    rule: 'resolve-in-tracked-scope',
+    label: 'resolve-in-tracked-scope · conditional resolve',
+    file: 'conditional-resolve.tsx',
+    dir: 'resolve-in-tracked-scope-conditional',
+    code: 'SC2004',
+    severity: 'error',
+    category: writesV2,
+    summary:
+      'resolve hidden behind a tracked conditional is still an imperative read inside createMemo, so the observer makes it throw.',
+  },
+  {
+    rule: 'missing-owner',
+    label: 'missing-owner · module-level tracked effect',
+    file: 'module-tracked-effect.tsx',
+    dir: 'missing-owner-module-tracked-effect',
+    code: 'SC4001',
+    severity: 'warning',
+    category: ownershipV2,
+    summary:
+      'A createTrackedEffect declared at module scope has no owner to dispose it, even though its callback is otherwise well-formed.',
+  },
+  {
+    rule: 'primitive-in-directive-application',
+    label: 'primitive-in-directive-application · memo in ref',
+    file: 'memo-in-ref.tsx',
+    dir: 'primitive-in-directive-application-memo',
+    code: 'SC6001',
+    severity: 'warning',
+    category: directivesV2,
+    summary:
+      'A memo created from a ref callback leaks once per element, proving the directive apply phase is not an owner boundary.',
+  },
+  {
+    rule: 'server-function-module-directive',
+    label: 'server-function-module-directive · wrapped export',
+    file: 'wrapped-export.tsx',
+    dir: 'server-function-module-directive-wrapped-export',
+    code: 'SC7006',
+    severity: 'error',
+    category: shapesV2,
+    summary:
+      'A generic wrapper hides a server function from the compiler, so a module-level use server directive drops the export from the client build.',
+  },
+  {
+    rule: 'reactive-dispatch-unresolved',
+    label: 'reactive-dispatch-unresolved · conditional receiver',
+    file: 'conditional-receiver.tsx',
+    dir: 'reactive-dispatch-unresolved-conditional-receiver',
+    code: 'SC9012',
+    severity: 'warning',
+    category: limitsV2,
+    summary:
+      'A conditional receiver is passed through a helper, leaving the checker unable to prove whether the eventual read is reactive.',
+  },
 ];
 
 const trackingV1 = 'Tracking & component semantics';
