@@ -3,7 +3,14 @@ import { Icon } from 'solid-heroicons';
 import { arrowUturnLeft, check } from 'solid-heroicons/outline';
 import { Button } from 'solid-repl/src/components/ui/Button';
 import { css, cx } from 'styled-system/css';
-import { VARIANT_ACTION, examplesFor, groupExamples, type ExampleEntry, type ExampleVariant } from '../examples';
+import {
+  VARIANT_ACTION,
+  exampleKey,
+  examplesFor,
+  groupExamples,
+  type ExampleEntry,
+  type ExampleVariant,
+} from '../examples';
 
 const selectStyles = css({
   maxWidth: 64,
@@ -30,7 +37,7 @@ const headerButtonOnMobile = css({
 });
 
 const optionLabel = (entry: ExampleEntry) =>
-  `${entry.code} · ${entry.rule}${entry.standalone === false ? ' (documented only)' : ''}`;
+  `${entry.code} · ${entry.label ?? entry.rule}${entry.standalone === false ? ' (documented only)' : ''}`;
 
 export const ExampleSelect: Component<{
   /** The Solid package currently selected; decides which catalog is offered. */
@@ -56,7 +63,7 @@ export const ExampleSelect: Component<{
         <For each={groups()}>
           {([category, entries]) => (
             <optgroup label={category}>
-              <For each={entries}>{(entry) => <option value={entry.rule}>{optionLabel(entry)}</option>}</For>
+              <For each={entries}>{(entry) => <option value={exampleKey(entry)}>{optionLabel(entry)}</option>}</For>
             </optgroup>
           )}
         </For>

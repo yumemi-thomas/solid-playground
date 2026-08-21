@@ -1,8 +1,8 @@
-import { EXAMPLES_BY_DIALECT, type ExampleEntry } from './catalog';
+import { EXAMPLES_BY_DIALECT, exampleKey, type ExampleEntry } from './catalog';
 import { composeExample, type ExampleVariant } from './composeExample';
 import type { Dialect } from './types';
 
-export { EXAMPLES_BY_DIALECT, type ExampleEntry } from './catalog';
+export { EXAMPLES_BY_DIALECT, exampleKey, type ExampleEntry } from './catalog';
 export { OTHER_VARIANT, VARIANT_ACTION, composeExample, type ExampleVariant } from './composeExample';
 export type { Dialect } from './types';
 
@@ -30,7 +30,7 @@ export function examplesFor(version: string | undefined): readonly ExampleEntry[
 }
 
 export function findExample(version: string | undefined, rule: string): ExampleEntry | undefined {
-  return examplesFor(version).find((entry) => entry.rule === rule);
+  return examplesFor(version).find((entry) => exampleKey(entry) === rule);
 }
 
 /** Groups an example list into the picker's `optgroup` order, keeping catalog order inside each. */

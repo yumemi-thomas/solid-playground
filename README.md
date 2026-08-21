@@ -111,15 +111,26 @@ Most examples export components instead of mounting one, so the preview pane
 stays empty — the point of an example is the diagnostic in the editor, not a
 running app.
 
-The example files live in `packages/playground/examples/<dialect>/<rule>/` as
-real `.tsx` files, one `incorrect.tsx` and one `correct.tsx` per rule, and their
-metadata lives in `packages/playground/src/examples/catalog.ts`. They are
+The example files live in `packages/playground/examples/<dialect>/<case>/` as
+real `.tsx` files, one `incorrect.tsx` and one `correct.tsx` per case study, and
+their metadata lives in `packages/playground/src/examples/catalog.ts`. A rule
+can have several cases when the interesting part is semantic proof rather than
+syntax — for example, a local component named `Loading` is not Solid's actual
+loading boundary. They are
 excluded from the project's own `tsc`, `oxlint`, and `oxfmt` runs, and checked
 by their own script instead:
 
 ```bash
 pnpm run test:examples
 ```
+
+The extra case studies are intentionally semantic: they hide the important
+fact behind a type alias, a component value, a wrapper, or an expression whose
+result is only known from TypeScript. That is where a syntax-only lint rule
+would either miss the bug or mistake a same-named component for a framework
+primitive. The examples include a fake `Loading`, a typed passthrough wrapper,
+a `Promise` hidden behind `Promise.resolve`, a `Date` nested in a server
+function interface, and a reactive list nested inside `Show`.
 
 For every catalog entry that verifier composes the file exactly as the
 playground does — header comment included — and then asserts that the incorrect
