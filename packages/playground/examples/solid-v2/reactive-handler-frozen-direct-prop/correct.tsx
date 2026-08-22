@@ -6,8 +6,21 @@ function Button(props: { onClick: () => void }) {
   return <button onClick={() => props.onClick()}>Save</button>;
 }
 
-const [handlers] = createStore({ click: noop });
+const [handlers, setHandlers] = createStore({ click: noop });
 
 export function App() {
-  return <Button onClick={handlers.click} />;
+  return (
+    <>
+      <Button onClick={handlers.click} />
+      <button
+        onClick={() =>
+          setHandlers((draft) => {
+            draft.click = () => console.log('new handler');
+          })
+        }
+      >
+        Replace handler
+      </button>
+    </>
+  );
 }

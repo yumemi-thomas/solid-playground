@@ -1,6 +1,10 @@
-const quiet = { read: () => 0 };
+import { createSignal } from 'solid-js';
+
+const [count] = createSignal(0);
+type Reader = { read: () => number };
+const reactive: Reader = { read: () => count() };
 
 export function Ticker() {
-  const value = quiet.read();
-  return <span>{value}</span>;
+  // Narrow the runtime receiver to one exact implementation.
+  return <span>{reactive.read()}</span>;
 }

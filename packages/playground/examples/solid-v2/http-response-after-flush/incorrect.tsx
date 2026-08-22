@@ -10,10 +10,9 @@ declare function fetchProduct(): Promise<Product>;
 
 const product = createMemo(() => fetchProduct());
 
-// `ProductDetails` renders below a `<Loading>` boundary. If the fetch is slow the
-// shell flushes first, the response head commits with it, and both of these
-// calls become silent no-ops.
-function ProductDetails() {
+// This archived-product component renders below Loading. If the fetch is slow,
+// the shell commits first and both response declarations become silent no-ops.
+function ArchivedProduct() {
   httpStatus(410);
   httpHeader('cache-control', 'no-store');
   return <article>{product().name}</article>;
@@ -23,7 +22,7 @@ export function Page() {
   return (
     <main>
       <Loading fallback={<span>Loading…</span>}>
-        <ProductDetails />
+        <ArchivedProduct />
       </Loading>
     </main>
   );

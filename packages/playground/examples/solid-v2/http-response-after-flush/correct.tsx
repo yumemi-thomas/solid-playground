@@ -10,24 +10,19 @@ declare function fetchProduct(): Promise<Product>;
 
 const product = createMemo(() => fetchProduct());
 
-// Shell content: this component renders outside every boundary, so the head has
-// not committed yet and both calls apply.
-function NotFound() {
-  httpStatus(404);
-  httpHeader('cache-control', 'no-store');
-  return <h1>Not found</h1>;
-}
-
-function ProductDetails() {
+function ArchivedProduct() {
   return <article>{product().name}</article>;
 }
 
 export function Page() {
+  // The archived status is known before loading product details, so declare it
+  // in shell content where it is guaranteed to reach the response.
+  httpStatus(410);
+  httpHeader('cache-control', 'no-store');
   return (
     <main>
-      <NotFound />
       <Loading fallback={<span>Loading…</span>}>
-        <ProductDetails />
+        <ArchivedProduct />
       </Loading>
     </main>
   );

@@ -16,6 +16,4 @@ export function Field() {
   return <input use:autofocus={true} />;
 }
 
-// Referencing the binding keeps it alive for bundlers that only see compiled
-// output, where the `use:` attribute has become a call.
 export const directives = { autofocus };

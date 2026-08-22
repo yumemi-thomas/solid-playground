@@ -1,6 +1,12 @@
 import { createSignal } from 'solid-js';
 
-function noop() {}
+function save() {
+  console.log('saved');
+}
+
+function audit() {
+  console.log('audited');
+}
 
 // The wrapper is stable, while the prop is read when the click actually runs.
 function SaveButton(props: { onSave: () => void }) {
@@ -8,6 +14,11 @@ function SaveButton(props: { onSave: () => void }) {
 }
 
 export function App() {
-  const [handler] = createSignal(noop);
-  return <SaveButton onSave={handler()} />;
+  const [handler, setHandler] = createSignal(save);
+  return (
+    <>
+      <SaveButton onSave={handler()} />
+      <button onClick={() => setHandler(() => audit)}>Replace handler</button>
+    </>
+  );
 }

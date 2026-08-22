@@ -1,14 +1,7 @@
-import { createStore } from 'solid-js';
+const invalidHandler = 12;
 
-function noop() {}
-
-// A store-backed handler prop is read during listener setup. Later store
-// updates cannot replace the installed function.
-function SaveButton(props: { onSave: () => void }) {
-  return <button onClick={props.onSave}>Save</button>;
-}
-
+// TypeScript does not inspect hyphenated JSX attributes, but Solid still treats
+// a native `on-*` name as an event listener. The number will fail at runtime.
 export function App() {
-  const [handlers] = createStore({ save: noop });
-  return <SaveButton onSave={handlers.save} />;
+  return <button on-save={invalidHandler}>Save</button>;
 }

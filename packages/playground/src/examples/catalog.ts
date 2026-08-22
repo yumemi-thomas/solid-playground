@@ -75,7 +75,7 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     code: 'SC1005',
     severity: 'warning',
     category: trackingV2,
-    summary: 'A signal accessor is consumed as a value without being called.',
+    summary: 'A signal accessor is interpolated as a value without being called.',
   },
   {
     rule: 'reactive-handler-frozen',
@@ -83,8 +83,7 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     code: 'SC1007',
     severity: 'warning',
     category: trackingV2,
-    summary:
-      'A reactive handler prop is read while the DOM listener is installed, so later handlers cannot replace it.',
+    summary: 'A hyphenated native event receives a non-callable value that TypeScript does not inspect.',
   },
   {
     rule: 'reactive-write-in-owned-scope',
@@ -92,7 +91,7 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     code: 'SC2001',
     severity: 'error',
     category: writesV2,
-    summary: 'A signal is written from a children-capable reactive scope, which throws in dev.',
+    summary: 'A signal is written during component setup, which throws in dev.',
   },
   {
     rule: 'action-called-in-owned-scope',
@@ -124,7 +123,7 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     code: 'SC3001',
     severity: 'error',
     category: leafV2,
-    summary: 'A leaf owner tries to register cleanup, create child work, or re-enter the flush cycle.',
+    summary: 'A reactive primitive is created inside a leaf owner that cannot own child work.',
   },
   {
     rule: 'missing-owner',
@@ -132,7 +131,7 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     code: 'SC4001',
     severity: 'warning',
     category: ownershipV2,
-    summary: 'An owner-requiring operation runs without an owner, so its subscriptions or teardown cannot be disposed.',
+    summary: 'An effect is created at module scope, so no owner can ever dispose it.',
   },
   {
     rule: 'pending-async-unsuspendable-read',
@@ -140,7 +139,7 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     code: 'SC5001',
     severity: 'error',
     category: asyncV2,
-    summary: 'A pending async accessor is read in an untracked or leaf scope that cannot suspend and retry.',
+    summary: 'A pending async accessor is read in a component body, which cannot suspend and retry.',
   },
   {
     rule: 'async-outside-loading-boundary',
@@ -324,10 +323,9 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     dir: 'reactive-dispatch-unresolved',
     code: 'SC9012',
     severity: 'warning',
-    alsoReports: ['SC1001'],
     category: limitsV2,
     summary:
-      'A call can reach implementations with different reactive behavior, so its execution cannot be pinned down.',
+      'A computed call can reach functions with different reactive behavior, so its execution cannot be pinned down.',
   },
   {
     rule: 'strict-read-untracked',
@@ -339,6 +337,17 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     category: trackingV2,
     summary:
       'A signal is read in a Show callback body instead of JSX, where the callback-local read is no longer tracked.',
+  },
+  {
+    rule: 'strict-read-untracked',
+    label: 'strict-read-untracked · effect apply callback',
+    file: 'effect-apply.tsx',
+    dir: 'strict-read-untracked-effect-apply',
+    code: 'SC1001',
+    severity: 'warning',
+    category: trackingV2,
+    summary:
+      'A store property is read in an effect’s untracked apply phase instead of being captured by its compute phase.',
   },
   {
     rule: 'no-destructure',
@@ -383,6 +392,17 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     category: writesV2,
     summary:
       'A memo writes to the signal it reads, creating a feedback edge even though the setter is hidden inside a computation body.',
+  },
+  {
+    rule: 'reactive-write-in-owned-scope',
+    label: 'reactive-write-in-owned-scope · untrack keeps the owner',
+    file: 'untrack-owner.tsx',
+    dir: 'reactive-write-in-owned-scope-untrack',
+    code: 'SC2001',
+    severity: 'error',
+    category: writesV2,
+    summary:
+      'Wrapping a write in untrack clears the observer but keeps the component owner that makes the write illegal.',
   },
   {
     rule: 'action-called-in-owned-scope',
@@ -447,6 +467,16 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
     category: asyncV2,
     summary:
       'Even a tracked effect cannot suspend: its pending async read happens after the graph settles and throws instead of retrying.',
+  },
+  {
+    rule: 'pending-async-unsuspendable-read',
+    label: 'pending-async-unsuspendable-read · onSettled callback',
+    file: 'on-settled.tsx',
+    dir: 'pending-async-unsuspendable-read-on-settled',
+    code: 'SC5001',
+    severity: 'error',
+    category: asyncV2,
+    summary: 'An onSettled callback is a leaf scope, so it cannot suspend for a pending async accessor.',
   },
   {
     rule: 'async-outside-loading-boundary',
@@ -561,6 +591,36 @@ export const SOLID_V2_EXAMPLES: readonly ExampleEntry[] = [
       'A createTrackedEffect declared at module scope has no owner to dispose it, even though its callback is otherwise well-formed.',
   },
   {
+    rule: 'missing-owner',
+    label: 'missing-owner · orphaned cleanup',
+    file: 'orphaned-cleanup.tsx',
+    dir: 'missing-owner-cleanup',
+    code: 'SC4001',
+    severity: 'warning',
+    category: ownershipV2,
+    summary: 'onCleanup is registered at module scope, where no owner disposal can ever run it.',
+  },
+  {
+    rule: 'missing-owner',
+    label: 'missing-owner · onSettled cleanup',
+    file: 'settled-cleanup.tsx',
+    dir: 'missing-owner-settled-cleanup',
+    code: 'SC4001',
+    severity: 'warning',
+    category: ownershipV2,
+    summary: 'An ownerless onSettled callback returns cleanup that has no lifecycle to attach to.',
+  },
+  {
+    rule: 'missing-owner',
+    label: 'missing-owner · orphaned Loading boundary',
+    file: 'orphaned-loading.tsx',
+    dir: 'missing-owner-loading-boundary',
+    code: 'SC4001',
+    severity: 'warning',
+    category: ownershipV2,
+    summary: 'A Loading boundary is created at module scope, so its managed subtree can never be disposed.',
+  },
+  {
     rule: 'primitive-in-directive-application',
     label: 'primitive-in-directive-application · memo in ref',
     file: 'memo-in-ref.tsx',
@@ -664,7 +724,18 @@ export const SOLID_V1_EXAMPLES: readonly ExampleEntry[] = [
     code: 'SC1005',
     severity: 'warning',
     category: trackingV1,
-    summary: 'A signal accessor is consumed as a value without being called.',
+    summary: 'A signal accessor is interpolated as a value without being called.',
+  },
+  {
+    rule: 'v1/uncalled-accessor',
+    label: 'v1/uncalled-accessor · numeric coercion',
+    file: 'numeric-coercion.tsx',
+    dir: 'uncalled-accessor-numeric-coercion',
+    code: 'SC1005',
+    severity: 'warning',
+    category: trackingV1,
+    summary:
+      'Unary numeric coercion accepts the accessor function itself and produces NaN instead of reading the signal.',
   },
   {
     rule: 'v1/reactive-handler-frozen',
@@ -743,7 +814,18 @@ export const SOLID_V1_EXAMPLES: readonly ExampleEntry[] = [
     code: 'SC8015',
     severity: 'warning',
     category: eslintV1,
-    summary: 'Reactive conditional JSX uses && or ?: instead of an explicit Show boundary.',
+    summary: 'Reactive conditional JSX uses && instead of an explicit Show boundary.',
+    checkerPreset: 'preferences',
+  },
+  {
+    rule: 'v1/prefer-show',
+    label: 'v1/prefer-show · reactive ternary',
+    file: 'reactive-ternary.tsx',
+    dir: 'prefer-show-reactive-ternary',
+    code: 'SC8015',
+    severity: 'warning',
+    category: eslintV1,
+    summary: 'A reactive ternary uses two JSX branches instead of a Show boundary with a fallback.',
     checkerPreset: 'preferences',
   },
   {
