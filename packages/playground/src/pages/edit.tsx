@@ -1,6 +1,7 @@
 import CompilerWorker from 'solid-repl/repl/compiler?worker';
 import FormatterWorker from 'solid-repl/repl/formatter?worker';
 import LinterWorker from 'solid-repl/repl/linter?worker';
+import type { LintMarker } from 'solid-repl/repl/linterProtocol';
 import { createEffect, createSignal, lazy, Show } from 'solid-js';
 import { useLocation, useNavigate } from '@solidjs/router';
 import { useAppContext } from '../context';
@@ -11,7 +12,8 @@ import type { ReplStorage, Tab } from 'solid-repl';
 import { Header } from '../components/header';
 import { css } from 'styled-system/css';
 import { normalizeSolidVersion } from '../solidVersion';
-import { OTHER_VARIANT, dialectFor, findExample, loadExamples, type ExampleVariant } from '../examples';
+import { OTHER_VARIANT, dialectFor, examplesFor, findExample, loadExamples, type ExampleVariant } from '../examples';
+import { exampleLintCacheKey } from '../examples/lintCache';
 
 function parseHash<T>(hash: string, fallback: T): T {
   try {
@@ -43,6 +45,7 @@ function safeRemove(key: string): void {
 }
 
 const Repl = lazy(() => import('solid-repl/src/repl'));
+const exampleLintMarkers = import('../examples/generatedLintMarkers.json');
 
 const exampleErrorStyles = css({ px: 4, py: 2, fontSize: 'sm', color: 'red.700', _dark: { color: 'red.300' } });
 
@@ -180,19 +183,33 @@ export const Edit = () => {
     persist();
   };
 
-  const showExample = (version: string, rule: string, variant: ExampleVariant) =>
-    loadExamples(version, rule, variant).then(
-      (files) => {
-        setExampleError('');
-        rememberExample(rule, variant);
-        // A rule can have several independent case files. Swapping variants
-        // replaces all of them together and opens the complete case set.
-        setTabs(files);
-        setExampleOpenFiles(files.map((file) => file.name));
-        persist();
-      },
-      (error: unknown) => setExampleError(error instanceof Error ? error.message : String(error)),
-    );
+  const showExample = async (version: string, rule: string, variant: ExampleVariant) => {
+    try {
+      const [files, { default: lintMarkers }] = await Promise.all([
+        loadExamples(version, rule, variant),
+        exampleLintMarkers,
+      ]);
+      const markerMap = lintMarkers as Record<string, LintMarker[]>;
+      const dialect = dialectFor(version);
+      const entries = examplesFor(version).filter((entry) => entry.rule === rule);
+      const primed = files.flatMap((file, index) => {
+        const entry = entries[index];
+        const markers = entry && markerMap[exampleLintCacheKey(dialect, entry.dir, variant)];
+        return markers ? [{ code: file.source, dialect, rule, markers }] : [];
+      });
+      if (primed.length) linter.postMessage({ event: 'PRIME', entries: primed });
+
+      setExampleError('');
+      rememberExample(rule, variant);
+      // A rule can have several independent case files. Swapping variants
+      // replaces all of them together and opens the complete case set.
+      setTabs(files);
+      setExampleOpenFiles(files.map((file) => file.name));
+      persist();
+    } catch (error) {
+      setExampleError(error instanceof Error ? error.message : String(error));
+    }
+  };
 
   const changeSolidVersion = (version: string) => {
     const selected = normalizeSolidVersion(version);

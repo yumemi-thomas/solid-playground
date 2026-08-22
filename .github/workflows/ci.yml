@@ -36,6 +36,8 @@ jobs:
 
       - run: pnpm run test:examples
 
+      - run: pnpm run test:linter-worker
+
       - run: pnpm run test:service-worker
 
       - run: pnpm run build

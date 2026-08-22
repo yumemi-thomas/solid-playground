@@ -1,0 +1,937 @@
+{
+  "solid-v1\u0000components-return-once\u0000correct": [],
+  "solid-v1\u0000components-return-once\u0000incorrect": [
+    {
+      "startLineNumber": 16,
+      "endLineNumber": 16,
+      "startColumn": 7,
+      "endColumn": 22,
+      "message": "[SC1004] this component's return value depends on a reactive condition, but a component body runs once; whichever branch is taken at setup renders forever, and the condition is never re-evaluated\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v1\u0000jsx-no-duplicate-props\u0000correct": [],
+  "solid-v1\u0000jsx-no-duplicate-props\u0000incorrect": [
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 51,
+      "endColumn": 58,
+      "message": "[SC8003] Duplicate props are not allowed.\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v1\u0000jsx-no-undef\u0000correct": [],
+  "solid-v1\u0000jsx-no-undef\u0000incorrect": [
+    {
+      "startLineNumber": 20,
+      "endLineNumber": 20,
+      "startColumn": 21,
+      "endColumn": 30,
+      "message": "[SC8005] 'autofocus' is not defined.\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v1\u0000missing-effect-function\u0000correct": [],
+  "solid-v1\u0000missing-effect-function\u0000incorrect": [
+    {
+      "startLineNumber": 16,
+      "endLineNumber": 16,
+      "startColumn": 3,
+      "endColumn": 15,
+      "message": "[SC7001] createEffect is called without an effect function; the signature is createEffect(fn, value?), where fn tracks dependencies and runs the side effect, and the optional value seeds the previous value passed to fn on its first run\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v1\u0000missing-owner\u0000correct": [],
+  "solid-v1\u0000missing-owner\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 1,
+      "endColumn": 13,
+      "message": "[SC4001] effect is created without a reactive owner; nothing will ever dispose it, so it keeps running and holding its subscriptions for the lifetime of the app\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v1\u0000no-destructure\u0000correct": [],
+  "solid-v1\u0000no-destructure\u0000incorrect": [
+    {
+      "startLineNumber": 14,
+      "endLineNumber": 14,
+      "startColumn": 15,
+      "endColumn": 24,
+      "message": "[SC1003] destructuring props unwraps each property once outside tracking; the bindings are frozen values, and the component never updates when the parent passes new props\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v1\u0000no-direct-mutation\u0000correct": [],
+  "solid-v1\u0000no-direct-mutation\u0000incorrect": [
+    {
+      "startLineNumber": 16,
+      "endLineNumber": 16,
+      "startColumn": 5,
+      "endColumn": 16,
+      "message": "[SC2003] \"user\" is a reactive value and is written through directly; Solid hands out a readonly proxy, so the write is dropped and nothing re-runs\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v1\u0000package-contract-incomplete\u0000correct": [],
+  "solid-v1\u0000package-contract-incomplete\u0000incorrect": [
+    {
+      "startLineNumber": 10,
+      "endLineNumber": 10,
+      "startColumn": 10,
+      "endColumn": 16,
+      "message": "[SC9005] the reactivity contract for solid-js has no entrypoint/export summary for imported export Portal; solid-checker cannot tell whether it reads reactive values, takes tracked callbacks, or returns accessors, so code flowing through it cannot be certified\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v1\u0000prefer-classlist\u0000correct": [],
+  "solid-v1\u0000prefer-classlist\u0000incorrect": [
+    {
+      "startLineNumber": 16,
+      "endLineNumber": 16,
+      "startColumn": 15,
+      "endColumn": 53,
+      "message": "[SC8013] The classlist prop should be used instead of clsx to efficiently set classes based on an object.\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v1\u0000prefer-for\u0000correct": [],
+  "solid-v1\u0000prefer-for\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 15,
+      "endColumn": 58,
+      "message": "[SC8014] Use Solid's `<For />` component for efficiently rendering lists. Array#map causes DOM elements to be recreated.\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v1\u0000prefer-show\u0000correct": [],
+  "solid-v1\u0000prefer-show\u0000incorrect": [
+    {
+      "startLineNumber": 21,
+      "endLineNumber": 21,
+      "startColumn": 8,
+      "endColumn": 32,
+      "message": "[SC8015] Use Solid's `<Show />` component for conditionally showing content.\noxlint(solid-checker/certification)",
+      "severity": 4
+    },
+    {
+      "startLineNumber": 22,
+      "endLineNumber": 22,
+      "startColumn": 8,
+      "endColumn": 42,
+      "message": "[SC8015] Use Solid's `<Show />` component for conditionally showing content with a fallback.\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v1\u0000reactive-dispatch-unresolved\u0000correct": [],
+  "solid-v1\u0000reactive-dispatch-unresolved\u0000incorrect": [
+    {
+      "startLineNumber": 16,
+      "endLineNumber": 16,
+      "startColumn": 34,
+      "endColumn": 41,
+      "message": "[SC1001] reactive accessor \"count\" is read directly in rendering function, which does not track; the read sees the current value once and never updates when \"count\" changes\noxlint(solid-checker/certification)",
+      "severity": 4
+    },
+    {
+      "startLineNumber": 19,
+      "endLineNumber": 19,
+      "startColumn": 24,
+      "endColumn": 62,
+      "message": "[SC9012] invoke invokes .read on a caller-supplied value, but the exact runtime implementation cannot be selected and the possible implementations do not have one proven reactive-read behavior\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v1\u0000reactive-handler-frozen\u0000correct": [],
+  "solid-v1\u0000reactive-handler-frozen\u0000incorrect": [
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 27,
+      "endColumn": 39,
+      "message": "[SC1001] component prop \"props.onSave\" is read directly in SaveButton, which does not track; the read sees the current value once and never updates when \"props.onSave\" changes\noxlint(solid-checker/certification)",
+      "severity": 4
+    },
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 27,
+      "endColumn": 39,
+      "message": "[SC1007] onClick reads props.onSave once during DOM setup; later reactive updates cannot replace the installed listener\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v1\u0000reactive-read-after-await\u0000correct": [],
+  "solid-v1\u0000reactive-read-after-await\u0000incorrect": [
+    {
+      "startLineNumber": 22,
+      "endLineNumber": 22,
+      "startColumn": 26,
+      "endColumn": 32,
+      "message": "[SC1002] reactive accessor \"userId\" is read after an await; dependency tracking ends at the first await, so this read registers no dependency and the computation never re-runs when \"userId\" changes\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v1\u0000reactive-source-uncaptured\u0000correct": [],
+  "solid-v1\u0000reactive-source-uncaptured\u0000incorrect": [],
+  "solid-v1\u0000reactive-write-in-owned-scope\u0000correct": [],
+  "solid-v1\u0000reactive-write-in-owned-scope\u0000incorrect": [
+    {
+      "startLineNumber": 14,
+      "endLineNumber": 14,
+      "startColumn": 20,
+      "endColumn": 43,
+      "message": "[SC2001] accessor setter \"setDoubled\" is called inside owned scope createMemo compute; writes during the tracking phase re-trigger the computation that made them and can loop the reactive graph\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v1\u0000strict-read-untracked\u0000correct": [],
+  "solid-v1\u0000strict-read-untracked\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 17,
+      "endColumn": 27,
+      "message": "[SC1001] component prop \"props.name\" is read directly in Profile, which does not track; the read sees the current value once and never updates when \"props.name\" changes\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v1\u0000uncalled-accessor\u0000correct": [],
+  "solid-v1\u0000uncalled-accessor\u0000incorrect": [
+    {
+      "startLineNumber": 17,
+      "endLineNumber": 17,
+      "startColumn": 26,
+      "endColumn": 31,
+      "message": "[SC1005] accessor \"count\" is used as a value in a template literal; the expression receives the accessor function itself, not the value it holds, and never updates\noxlint(solid-checker/certification)",
+      "severity": 4
+    },
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 15,
+      "endColumn": 20,
+      "message": "[SC1005] accessor \"count\" is used as a value in a numeric coercion; the expression receives the accessor function itself, not the value it holds, and never updates\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000action-called-in-owned-scope-memo-dispatch\u0000correct": [],
+  "solid-v2\u0000action-called-in-owned-scope-memo-dispatch\u0000incorrect": [
+    {
+      "startLineNumber": 21,
+      "endLineNumber": 21,
+      "startColumn": 3,
+      "endColumn": 16,
+      "message": "[SC2002] action \"save\" is called inside owned scope createMemo compute; invoking an action starts a write transaction (optimistic writes, refresh) under a children-capable owner, which re-triggers the scope that called it\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000action-called-in-owned-scope\u0000correct": [],
+  "solid-v2\u0000action-called-in-owned-scope\u0000incorrect": [
+    {
+      "startLineNumber": 20,
+      "endLineNumber": 20,
+      "startColumn": 3,
+      "endColumn": 10,
+      "message": "[SC2002] action \"save\" is called inside owned scope SaveOnMount; invoking an action starts a write transaction (optimistic writes, refresh) under a children-capable owner, which re-triggers the scope that called it\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000async-outside-loading-boundary-impostor\u0000correct": [],
+  "solid-v2\u0000async-outside-loading-boundary-impostor\u0000incorrect": [
+    {
+      "startLineNumber": 29,
+      "endLineNumber": 29,
+      "startColumn": 12,
+      "endColumn": 18,
+      "message": "[SC5003] async accessor \"user()\" is rendered without a Loading boundary above it; while it is pending nothing renders, and the mount is deferred until all uncaught async settles (Solid dev warning ASYNC_OUTSIDE_LOADING_BOUNDARY)\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000async-outside-loading-boundary-partial-coverage\u0000correct": [],
+  "solid-v2\u0000async-outside-loading-boundary-partial-coverage\u0000incorrect": [
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 11,
+      "endColumn": 18,
+      "message": "[SC5003] async accessor \"first()\" is rendered without a Loading boundary above it; while it is pending nothing renders, and the mount is deferred until all uncaught async settles (Solid dev warning ASYNC_OUTSIDE_LOADING_BOUNDARY)\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000async-outside-loading-boundary-passthrough\u0000correct": [],
+  "solid-v2\u0000async-outside-loading-boundary-passthrough\u0000incorrect": [
+    {
+      "startLineNumber": 32,
+      "endLineNumber": 32,
+      "startColumn": 12,
+      "endColumn": 18,
+      "message": "[SC5003] async accessor \"user()\" is rendered without a Loading boundary above it; while it is pending nothing renders, and the mount is deferred until all uncaught async settles (Solid dev warning ASYNC_OUTSIDE_LOADING_BOUNDARY)\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000async-outside-loading-boundary\u0000correct": [],
+  "solid-v2\u0000async-outside-loading-boundary\u0000incorrect": [
+    {
+      "startLineNumber": 27,
+      "endLineNumber": 27,
+      "startColumn": 15,
+      "endColumn": 21,
+      "message": "[SC5003] async accessor \"user()\" is rendered without a Loading boundary above it; while it is pending nothing renders, and the mount is deferred until all uncaught async settles (Solid dev warning ASYNC_OUTSIDE_LOADING_BOUNDARY)\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000components-return-once-typed-component\u0000correct": [],
+  "solid-v2\u0000components-return-once-typed-component\u0000incorrect": [
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 7,
+      "endColumn": 17,
+      "message": "[SC1004] this component's return value depends on a reactive condition, but a component body runs once; whichever branch is taken at setup renders forever, and the condition is never re-evaluated\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000components-return-once\u0000correct": [],
+  "solid-v2\u0000components-return-once\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 7,
+      "endColumn": 22,
+      "message": "[SC1004] this component's return value depends on a reactive condition, but a component body runs once; whichever branch is taken at setup renders forever, and the condition is never re-evaluated\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000http-response-after-flush-static-header-helper\u0000correct": [],
+  "solid-v2\u0000http-response-after-flush-static-header-helper\u0000incorrect": [
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 3,
+      "endColumn": 13,
+      "message": "[SC7005] httpHeader() is called by content below a <Loading> boundary; under streaming SSR the response head commits at the shell flush, and when this boundary settles after the shell has flushed the call is a committed no-op — the header is silently dropped, with no queue holding it for later\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000http-response-after-flush\u0000correct": [],
+  "solid-v2\u0000http-response-after-flush\u0000incorrect": [
+    {
+      "startLineNumber": 24,
+      "endLineNumber": 24,
+      "startColumn": 3,
+      "endColumn": 13,
+      "message": "[SC7005] httpStatus() is called by content below a <Loading> boundary; under streaming SSR the response head commits at the shell flush, and when this boundary settles after the shell has flushed the call is a committed no-op — the status is silently dropped, with no queue holding it for later\noxlint(solid-checker/certification)",
+      "severity": 4
+    },
+    {
+      "startLineNumber": 25,
+      "endLineNumber": 25,
+      "startColumn": 3,
+      "endColumn": 13,
+      "message": "[SC7005] httpHeader() is called by content below a <Loading> boundary; under streaming SSR the response head commits at the shell flush, and when this boundary settles after the shell has flushed the call is a committed no-op — the header is silently dropped, with no queue holding it for later\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000jsx-no-duplicate-props-inner-html\u0000correct": [],
+  "solid-v2\u0000jsx-no-duplicate-props-inner-html\u0000incorrect": [
+    {
+      "startLineNumber": 11,
+      "endLineNumber": 11,
+      "startColumn": 10,
+      "endColumn": 42,
+      "message": "[SC8003] Using JSX children, `props.innerHTML` at the same time is not allowed.\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000jsx-no-duplicate-props\u0000correct": [],
+  "solid-v2\u0000jsx-no-duplicate-props\u0000incorrect": [
+    {
+      "startLineNumber": 13,
+      "endLineNumber": 13,
+      "startColumn": 10,
+      "endColumn": 34,
+      "message": "[SC8003] Using JSX children, `props.innerHTML` at the same time is not allowed.\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000leaf-owner-forbidden-call-cleanup-registration\u0000correct": [],
+  "solid-v2\u0000leaf-owner-forbidden-call-cleanup-registration\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 5,
+      "endColumn": 14,
+      "message": "[SC3001] onCleanup is called inside onSettled, a leaf owner that manages cleanup through its return value; Solid throws CLEANUP_IN_FORBIDDEN_SCOPE here in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000leaf-owner-forbidden-call-nested-root\u0000correct": [],
+  "solid-v2\u0000leaf-owner-forbidden-call-nested-root\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 5,
+      "endColumn": 15,
+      "message": "[SC3001] reactive primitive createRoot is created inside onSettled; onSettled is a leaf owner with no children, so nested primitives are never tracked or disposed, and Solid throws in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000leaf-owner-forbidden-call-scheduler-reentry\u0000correct": [],
+  "solid-v2\u0000leaf-owner-forbidden-call-scheduler-reentry\u0000incorrect": [
+    {
+      "startLineNumber": 13,
+      "endLineNumber": 13,
+      "startColumn": 19,
+      "endColumn": 24,
+      "message": "[SC3001] flush() is called inside onSettled, which runs as part of the flush cycle itself; the call would re-enter the scheduler, and Solid throws here in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000leaf-owner-forbidden-call\u0000correct": [],
+  "solid-v2\u0000leaf-owner-forbidden-call\u0000incorrect": [
+    {
+      "startLineNumber": 17,
+      "endLineNumber": 17,
+      "startColumn": 19,
+      "endColumn": 29,
+      "message": "[SC3001] reactive primitive createMemo is created inside onSettled; onSettled is a leaf owner with no children, so nested primitives are never tracked or disposed, and Solid throws in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    },
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 5,
+      "endColumn": 14,
+      "message": "[SC3001] onCleanup is called inside onSettled, a leaf owner that manages cleanup through its return value; Solid throws CLEANUP_IN_FORBIDDEN_SCOPE here in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    },
+    {
+      "startLineNumber": 19,
+      "endLineNumber": 19,
+      "startColumn": 5,
+      "endColumn": 10,
+      "message": "[SC3001] flush() is called inside onSettled, which runs as part of the flush cycle itself; the call would re-enter the scheduler, and Solid throws here in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000missing-effect-function-named-compute\u0000correct": [],
+  "solid-v2\u0000missing-effect-function-named-compute\u0000incorrect": [
+    {
+      "startLineNumber": 20,
+      "endLineNumber": 20,
+      "startColumn": 3,
+      "endColumn": 15,
+      "message": "[SC7001] createEffect is called without an effect function; the signature is createEffect(compute, apply), where compute tracks dependencies and returns a value, and apply receives that value and performs the side effect\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000missing-effect-function\u0000correct": [],
+  "solid-v2\u0000missing-effect-function\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 3,
+      "endColumn": 15,
+      "message": "[SC7001] createEffect is called without an effect function; the signature is createEffect(compute, apply), where compute tracks dependencies and returns a value, and apply receives that value and performs the side effect\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000missing-owner-module-tracked-effect\u0000correct": [],
+  "solid-v2\u0000missing-owner-module-tracked-effect\u0000incorrect": [
+    {
+      "startLineNumber": 14,
+      "endLineNumber": 14,
+      "startColumn": 1,
+      "endColumn": 20,
+      "message": "[SC4001] effect is created without a reactive owner; nothing will ever dispose it, so it keeps running and holding its subscriptions for the lifetime of the app\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000missing-owner\u0000correct": [],
+  "solid-v2\u0000missing-owner\u0000incorrect": [
+    {
+      "startLineNumber": 16,
+      "endLineNumber": 16,
+      "startColumn": 1,
+      "endColumn": 13,
+      "message": "[SC4001] effect is created without a reactive owner; nothing will ever dispose it, so it keeps running and holding its subscriptions for the lifetime of the app\noxlint(solid-checker/certification)",
+      "severity": 4
+    },
+    {
+      "startLineNumber": 17,
+      "endLineNumber": 17,
+      "startColumn": 1,
+      "endColumn": 10,
+      "message": "[SC4001] onCleanup is called without a reactive owner; no scope's disposal can trigger it, so this cleanup function will never run\noxlint(solid-checker/certification)",
+      "severity": 4
+    },
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 21,
+      "startColumn": 11,
+      "endColumn": 2,
+      "message": "[SC4001] onSettled returns a cleanup function in a scope with no owner to register it on; Solid throws SETTLED_CLEANUP_UNOWNED here in dev, and in production the cleanup is silently dropped and will never run\noxlint(solid-checker/certification)",
+      "severity": 8
+    },
+    {
+      "startLineNumber": 23,
+      "endLineNumber": 23,
+      "startColumn": 31,
+      "endColumn": 39,
+      "message": "[SC4001] boundary is created without a reactive owner; it can never be disposed, and the subtree it manages will leak\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000no-destructure-typed-component\u0000correct": [],
+  "solid-v2\u0000no-destructure-typed-component\u0000incorrect": [
+    {
+      "startLineNumber": 16,
+      "endLineNumber": 16,
+      "startColumn": 40,
+      "endColumn": 49,
+      "message": "[SC1003] destructuring props unwraps each property once outside tracking; the bindings are frozen values, and the component never updates when the parent passes new props; this component's call sites cannot be enumerated (it is exported, spread into, or referenced outside JSX), so whether the props are signal-backed can be neither proven nor ruled out — this finding is a proof obligation, not a proven runtime defect\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000no-destructure\u0000correct": [],
+  "solid-v2\u0000no-destructure\u0000incorrect": [
+    {
+      "startLineNumber": 14,
+      "endLineNumber": 14,
+      "startColumn": 15,
+      "endColumn": 24,
+      "message": "[SC1003] destructuring props unwraps each property once outside tracking; the bindings are frozen values, and the component never updates when the parent passes new props\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000no-direct-mutation-array-index\u0000correct": [],
+  "solid-v2\u0000no-direct-mutation-array-index\u0000incorrect": [
+    {
+      "startLineNumber": 16,
+      "endLineNumber": 16,
+      "startColumn": 5,
+      "endColumn": 38,
+      "message": "[SC2003] \"profile\" is a reactive store and is written through directly; Solid hands out a readonly proxy, so the write is dropped and nothing re-runs\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000no-direct-mutation\u0000correct": [],
+  "solid-v2\u0000no-direct-mutation\u0000incorrect": [
+    {
+      "startLineNumber": 17,
+      "endLineNumber": 17,
+      "startColumn": 5,
+      "endColumn": 22,
+      "message": "[SC2003] \"profile\" is a reactive store and is written through directly; Solid hands out a readonly proxy, so the write is dropped and nothing re-runs\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000package-contract-incomplete\u0000correct": [],
+  "solid-v2\u0000package-contract-incomplete\u0000incorrect": [
+    {
+      "startLineNumber": 10,
+      "endLineNumber": 10,
+      "startColumn": 10,
+      "endColumn": 24,
+      "message": "[SC9005] the reactivity contract for solid-js has no entrypoint/export summary for imported export createResource; solid-checker cannot tell whether it reads reactive values, takes tracked callbacks, or returns accessors, so code flowing through it cannot be certified\noxlint(solid-checker/certification)",
+      "severity": 8
+    },
+    {
+      "startLineNumber": 19,
+      "endLineNumber": 19,
+      "startColumn": 31,
+      "endColumn": 33,
+      "message": "[SC9011] the reactive source \"id\" is passed to createResource, whose reactive behaviour is not described anywhere: it has no body in this project, no package contract entry, and is not a Solid primitive; whether reads through it stay tracked cannot be certified\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000pending-async-unsuspendable-read-tracked-effect\u0000correct": [],
+  "solid-v2\u0000pending-async-unsuspendable-read-tracked-effect\u0000incorrect": [
+    {
+      "startLineNumber": 17,
+      "endLineNumber": 17,
+      "startColumn": 41,
+      "endColumn": 47,
+      "message": "[SC5001] pending async accessor \"user()\" is read inside createTrackedEffect, which runs after the graph settles and cannot suspend; a pending read here throws at runtime\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000pending-async-unsuspendable-read\u0000correct": [],
+  "solid-v2\u0000pending-async-unsuspendable-read\u0000incorrect": [
+    {
+      "startLineNumber": 27,
+      "endLineNumber": 27,
+      "startColumn": 16,
+      "endColumn": 22,
+      "message": "[SC5001] pending async accessor \"user()\" is read outside a tracking scope; an untracked read cannot suspend or retry, and Solid throws PENDING_ASYNC_UNTRACKED_READ in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    },
+    {
+      "startLineNumber": 28,
+      "endLineNumber": 28,
+      "startColumn": 31,
+      "endColumn": 37,
+      "message": "[SC5001] pending async accessor \"user()\" is read inside onSettled, which runs after the graph settles and cannot suspend; a pending read here throws at runtime\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000prefer-for-filtered-fragment\u0000correct": [],
+  "solid-v2\u0000prefer-for-filtered-fragment\u0000incorrect": [
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 13,
+      "endColumn": 85,
+      "message": "[SC8014] Use Solid's `<For />` component for efficiently rendering lists. Array#map causes DOM elements to be recreated.\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000prefer-for-nested-show\u0000correct": [],
+  "solid-v2\u0000prefer-for-nested-show\u0000incorrect": [
+    {
+      "startLineNumber": 21,
+      "endLineNumber": 21,
+      "startColumn": 12,
+      "endColumn": 55,
+      "message": "[SC8014] Use Solid's `<For />` component for efficiently rendering lists. Array#map causes DOM elements to be recreated.\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000prefer-for\u0000correct": [],
+  "solid-v2\u0000prefer-for\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 15,
+      "endColumn": 58,
+      "message": "[SC8014] Use Solid's `<For />` component for efficiently rendering lists. Array#map causes DOM elements to be recreated.\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000prefer-show-reactive-ternary\u0000correct": [],
+  "solid-v2\u0000prefer-show-reactive-ternary\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 17,
+      "endColumn": 56,
+      "message": "[SC8015] Use Solid's `<Show />` component for conditionally showing content with a fallback.\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000prefer-show\u0000correct": [],
+  "solid-v2\u0000prefer-show\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 17,
+      "endColumn": 56,
+      "message": "[SC8015] Use Solid's `<Show />` component for conditionally showing content.\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000primitive-in-directive-application-memo\u0000correct": [],
+  "solid-v2\u0000primitive-in-directive-application-memo\u0000incorrect": [
+    {
+      "startLineNumber": 17,
+      "endLineNumber": 17,
+      "startColumn": 19,
+      "endColumn": 29,
+      "message": "[SC6001] reactive primitive createMemo registers a computation in a directive application callback; the apply phase runs once per element with no owner, so the computation is never disposed and leaks for every element the directive is applied to (the dev runtime warns NO_OWNER for it)\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000primitive-in-directive-application\u0000correct": [],
+  "solid-v2\u0000primitive-in-directive-application\u0000incorrect": [
+    {
+      "startLineNumber": 20,
+      "endLineNumber": 20,
+      "startColumn": 5,
+      "endColumn": 17,
+      "message": "[SC6001] reactive primitive createEffect registers a computation in a directive application callback; the apply phase runs once per element with no owner, so the computation is never disposed and leaks for every element the directive is applied to (the dev runtime warns NO_OWNER for it)\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000reactive-dispatch-unresolved-conditional-receiver\u0000correct": [],
+  "solid-v2\u0000reactive-dispatch-unresolved-conditional-receiver\u0000incorrect": [
+    {
+      "startLineNumber": 23,
+      "endLineNumber": 23,
+      "startColumn": 24,
+      "endColumn": 30,
+      "message": "[SC9012] invoke invokes .read on a caller-supplied value, but the exact runtime implementation cannot be selected and the possible implementations do not have one proven reactive-read behavior\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000reactive-dispatch-unresolved\u0000correct": [],
+  "solid-v2\u0000reactive-dispatch-unresolved\u0000incorrect": [
+    {
+      "startLineNumber": 16,
+      "endLineNumber": 16,
+      "startColumn": 34,
+      "endColumn": 41,
+      "message": "[SC1001] reactive accessor \"count\" is read directly in rendering function, which does not track; the read sees the current value once and never updates when \"count\" changes\noxlint(solid-checker/certification)",
+      "severity": 4
+    },
+    {
+      "startLineNumber": 19,
+      "endLineNumber": 19,
+      "startColumn": 24,
+      "endColumn": 62,
+      "message": "[SC9012] invoke invokes .read on a caller-supplied value, but the exact runtime implementation cannot be selected and the possible implementations do not have one proven reactive-read behavior\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000reactive-handler-frozen-direct-prop\u0000correct": [],
+  "solid-v2\u0000reactive-handler-frozen-direct-prop\u0000incorrect": [
+    {
+      "startLineNumber": 16,
+      "endLineNumber": 16,
+      "startColumn": 27,
+      "endColumn": 40,
+      "message": "[SC1007] onClick reads props.onClick once during DOM setup; later reactive updates cannot replace the installed listener\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000reactive-handler-frozen\u0000correct": [],
+  "solid-v2\u0000reactive-handler-frozen\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 27,
+      "endColumn": 39,
+      "message": "[SC1007] onClick reads props.onSave once during DOM setup; later reactive updates cannot replace the installed listener\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000reactive-read-after-await-named-computation\u0000correct": [],
+  "solid-v2\u0000reactive-read-after-await-named-computation\u0000incorrect": [
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 19,
+      "endColumn": 25,
+      "message": "[SC1002] reactive accessor \"userId\" is read after an await; dependency tracking ends at the first await, so this read registers no dependency and the computation never re-runs when \"userId\" changes\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000reactive-read-after-await\u0000correct": [],
+  "solid-v2\u0000reactive-read-after-await\u0000incorrect": [
+    {
+      "startLineNumber": 22,
+      "endLineNumber": 22,
+      "startColumn": 26,
+      "endColumn": 32,
+      "message": "[SC1002] reactive accessor \"userId\" is read after an await; dependency tracking ends at the first await, so this read registers no dependency and the computation never re-runs when \"userId\" changes\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000reactive-source-uncaptured\u0000correct": [],
+  "solid-v2\u0000reactive-source-uncaptured\u0000incorrect": [],
+  "solid-v2\u0000reactive-write-in-owned-scope-memo-feedback\u0000correct": [],
+  "solid-v2\u0000reactive-write-in-owned-scope-memo-feedback\u0000incorrect": [
+    {
+      "startLineNumber": 17,
+      "endLineNumber": 17,
+      "startColumn": 3,
+      "endColumn": 24,
+      "message": "[SC2001] accessor setter \"setCount\" is called inside owned scope createMemo compute; writes under a children-capable owner create feedback loops in the reactive graph, and Solid throws REACTIVE_WRITE_IN_OWNED_SCOPE here in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000reactive-write-in-owned-scope\u0000correct": [],
+  "solid-v2\u0000reactive-write-in-owned-scope\u0000incorrect": [
+    {
+      "startLineNumber": 16,
+      "endLineNumber": 16,
+      "startColumn": 3,
+      "endColumn": 14,
+      "message": "[SC2001] accessor setter \"setCount\" is called inside owned scope Counter; writes under a children-capable owner create feedback loops in the reactive graph, and Solid throws REACTIVE_WRITE_IN_OWNED_SCOPE here in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    },
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 17,
+      "endColumn": 28,
+      "message": "[SC2001] accessor setter \"setCount\" is called inside owned scope Counter; writes under a children-capable owner create feedback loops in the reactive graph, and Solid throws REACTIVE_WRITE_IN_OWNED_SCOPE here in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000resolve-in-tracked-scope-conditional\u0000correct": [],
+  "solid-v2\u0000resolve-in-tracked-scope-conditional\u0000incorrect": [
+    {
+      "startLineNumber": 17,
+      "endLineNumber": 17,
+      "startColumn": 27,
+      "endColumn": 34,
+      "message": "[SC2004] resolve() is called inside the tracked createMemo callback; resolve() reads the expression once and never tracks updates, and an active observer makes Solid throw \"Cannot call resolve inside a reactive scope\" here in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000resolve-in-tracked-scope\u0000correct": [],
+  "solid-v2\u0000resolve-in-tracked-scope\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 10,
+      "endColumn": 17,
+      "message": "[SC2004] resolve() is called inside the tracked createMemo callback; resolve() reads the expression once and never tracks updates, and an active observer makes Solid throw \"Cannot call resolve inside a reactive scope\" here in dev\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000server-function-module-directive-wrapped-export\u0000correct": [],
+  "solid-v2\u0000server-function-module-directive-wrapped-export\u0000incorrect": [
+    {
+      "startLineNumber": 20,
+      "endLineNumber": 20,
+      "startColumn": 14,
+      "endColumn": 21,
+      "message": "[SC7006] this module's top-level \"use server\" directive extracts every export to the server build, but export getUser is a wrapped function, not a direct function declaration; the compiler turns only direct function exports into client references, so this export is silently dropped from the client build\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000server-function-module-directive\u0000correct": [],
+  "solid-v2\u0000server-function-module-directive\u0000incorrect": [
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 14,
+      "endColumn": 21,
+      "message": "[SC7006] this module's top-level \"use server\" directive extracts every export to the server build, but export getUser is a wrapped function, not a direct function declaration; the compiler turns only direct function exports into client references, so this export is silently dropped from the client build\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000server-function-rich-argument-nested-regexp\u0000correct": [],
+  "solid-v2\u0000server-function-rich-argument-nested-regexp\u0000incorrect": [
+    {
+      "startLineNumber": 20,
+      "endLineNumber": 20,
+      "startColumn": 38,
+      "endColumn": 58,
+      "message": "[SC7007] server function save receives an object holding a Date, Map, Set, RegExp, or typed array; the default server-function transport is plain JSON, which reaches nested values, so the nested one is silently flattened rather than sent\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000server-function-rich-argument-nested-type\u0000correct": [],
+  "solid-v2\u0000server-function-rich-argument-nested-type\u0000incorrect": [
+    {
+      "startLineNumber": 24,
+      "endLineNumber": 24,
+      "startColumn": 38,
+      "endColumn": 78,
+      "message": "[SC7007] server function saveAudit receives an object holding a Date, Map, Set, RegExp, or typed array; the default server-function transport is plain JSON, which reaches nested values, so the nested one is silently flattened rather than sent\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000server-function-rich-argument\u0000correct": [],
+  "solid-v2\u0000server-function-rich-argument\u0000incorrect": [
+    {
+      "startLineNumber": 20,
+      "endLineNumber": 20,
+      "startColumn": 25,
+      "endColumn": 35,
+      "message": "[SC7007] server function saveEvent receives an argument typed Date (Date); server-function arguments travel as plain JSON by default, and a value JSON cannot carry faithfully throws at the transport: \"Server function arguments are sent as JSON by default and these arguments are not JSON-serializable\"\noxlint(solid-checker/certification)",
+      "severity": 8
+    },
+    {
+      "startLineNumber": 20,
+      "endLineNumber": 20,
+      "startColumn": 37,
+      "endColumn": 56,
+      "message": "[SC7007] server function saveEvent receives an argument typed Set<string> (Set); server-function arguments travel as plain JSON by default, and a value JSON cannot carry faithfully throws at the transport: \"Server function arguments are sent as JSON by default and these arguments are not JSON-serializable\"\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000strict-read-untracked-show-callback\u0000correct": [],
+  "solid-v2\u0000strict-read-untracked-show-callback\u0000incorrect": [
+    {
+      "startLineNumber": 20,
+      "endLineNumber": 20,
+      "startColumn": 23,
+      "endColumn": 29,
+      "message": "[SC1001] reactive accessor \"name\" is read directly in rendering function, which does not track; the read sees the current value once and never updates when \"name\" changes\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000strict-read-untracked\u0000correct": [],
+  "solid-v2\u0000strict-read-untracked\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 17,
+      "endColumn": 27,
+      "message": "[SC1001] component prop \"props.name\" is read directly in Profile, which does not track; the read sees the current value once and never updates when \"props.name\" changes\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000sync-computation-received-async-promise-expression\u0000correct": [],
+  "solid-v2\u0000sync-computation-received-async-promise-expression\u0000incorrect": [
+    {
+      "startLineNumber": 22,
+      "endLineNumber": 22,
+      "startColumn": 14,
+      "endColumn": 24,
+      "message": "[SC7002] createMemo is marked sync: true but its computation can return a Promise or AsyncIterable; sync: true asserts a synchronous result so the runtime can skip the async-shape probe — dev still probes and throws SYNC_NODE_RECEIVED_ASYNC, and production stores the unawaited value as-is\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000sync-computation-received-async-typed-promise-helper\u0000correct": [],
+  "solid-v2\u0000sync-computation-received-async-typed-promise-helper\u0000incorrect": [
+    {
+      "startLineNumber": 21,
+      "endLineNumber": 21,
+      "startColumn": 17,
+      "endColumn": 27,
+      "message": "[SC7002] createMemo is marked sync: true but its computation can return a Promise or AsyncIterable; sync: true asserts a synchronous result so the runtime can skip the async-shape probe — dev still probes and throws SYNC_NODE_RECEIVED_ASYNC, and production stores the unawaited value as-is\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000sync-computation-received-async\u0000correct": [],
+  "solid-v2\u0000sync-computation-received-async\u0000incorrect": [
+    {
+      "startLineNumber": 23,
+      "endLineNumber": 23,
+      "startColumn": 14,
+      "endColumn": 24,
+      "message": "[SC7002] createMemo is marked sync: true but its computation can return a Promise or AsyncIterable; sync: true asserts a synchronous result so the runtime can skip the async-shape probe — dev still probes and throws SYNC_NODE_RECEIVED_ASYNC, and production stores the unawaited value as-is\noxlint(solid-checker/certification)",
+      "severity": 8
+    }
+  ],
+  "solid-v2\u0000uncalled-accessor-numeric-coercion\u0000correct": [],
+  "solid-v2\u0000uncalled-accessor-numeric-coercion\u0000incorrect": [
+    {
+      "startLineNumber": 15,
+      "endLineNumber": 15,
+      "startColumn": 25,
+      "endColumn": 30,
+      "message": "[SC1005] accessor \"count\" is used as a value in a numeric coercion; the expression receives the accessor function itself, not the value it holds, and never updates\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ],
+  "solid-v2\u0000uncalled-accessor\u0000correct": [],
+  "solid-v2\u0000uncalled-accessor\u0000incorrect": [
+    {
+      "startLineNumber": 17,
+      "endLineNumber": 17,
+      "startColumn": 26,
+      "endColumn": 31,
+      "message": "[SC1005] accessor \"count\" is used as a value in a template literal; the expression receives the accessor function itself, not the value it holds, and never updates\noxlint(solid-checker/certification)",
+      "severity": 4
+    },
+    {
+      "startLineNumber": 18,
+      "endLineNumber": 18,
+      "startColumn": 15,
+      "endColumn": 20,
+      "message": "[SC1005] accessor \"count\" is used as a value in a numeric coercion; the expression receives the accessor function itself, not the value it holds, and never updates\noxlint(solid-checker/certification)",
+      "severity": 4
+    }
+  ]
+}

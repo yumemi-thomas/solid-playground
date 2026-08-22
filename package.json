@@ -15,8 +15,10 @@
     "build": "pnpm panda codegen && cd packages/playground && pnpm build",
     "dev": "cd packages/playground && pnpm dev",
     "test:lint-api": "node --experimental-strip-types scripts/smoke-lint-api.mjs",
-    "test:examples": "node --experimental-strip-types scripts/verify-examples.mjs",
+    "test:examples": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/verify-examples.mjs",
+    "test:linter-worker": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test packages/solid-repl/test/linter-handlers.test.mjs",
     "test:service-worker": "node --test packages/playground/test/service-worker.test.mjs",
+    "generate:example-lint-cache": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/verify-examples.mjs --write-cache",
     "panda:watch": "panda codegen --watch",
     "format": "oxfmt .",
     "lint": "oxlint ."

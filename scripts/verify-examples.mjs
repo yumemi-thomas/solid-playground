@@ -9,16 +9,19 @@
 //   * both files typecheck, so the editor shows only the checker's findings.
 // Entries marked `standalone: false` are only required to typecheck: they
 // document a rule a single playground file cannot reproduce.
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawn } from 'node:child_process';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
 const examplesRoot = resolve(repositoryRoot, 'packages/playground/examples');
+const generatedCachePath = resolve(repositoryRoot, 'packages/playground/src/examples/generatedLintMarkers.json');
 
 const { runPlaygroundLintBatch } = await import(resolve(repositoryRoot, 'api/solid-playground-lint.ts'));
 const { EXAMPLES_BY_DIALECT } = await import(resolve(repositoryRoot, 'packages/playground/src/examples/catalog.ts'));
 const { composeExample } = await import(resolve(repositoryRoot, 'packages/playground/src/examples/composeExample.ts'));
+const { exampleLintCacheKey } = await import(resolve(repositoryRoot, 'packages/playground/src/examples/lintCache.ts'));
+const { diagnosticsToMarkers } = await import(resolve(repositoryRoot, 'packages/solid-repl/repl/linterProtocol.ts'));
 
 const args = process.argv.slice(2);
 const optionOf = (name) => {
@@ -28,6 +31,12 @@ const optionOf = (name) => {
 const dialectFilter = optionOf('dialect');
 const ruleFilter = optionOf('rule');
 const skipTypes = args.includes('--no-types');
+const writeCache = args.includes('--write-cache');
+
+function renderExampleLintCache(entries) {
+  const sorted = Object.fromEntries([...entries].sort(([left], [right]) => left.localeCompare(right)));
+  return `${JSON.stringify(sorted, null, 2)}\n`;
+}
 
 function manifestFor(dialect) {
   const path = resolve(repositoryRoot, `node_modules/solid-checker/lib/rules-${dialect}.json`);
@@ -188,7 +197,11 @@ for (const [dialect, entries] of Object.entries(EXAMPLES_BY_DIALECT)) {
           // Keep each shipped snippet isolated exactly as it is in the REPL.
           batchKey: entry.rule === 'server-function-rich-argument' ? `${entry.dir}-${kind}` : undefined,
         });
-        lintTargets.push({ kind, lintByKind });
+        lintTargets.push({
+          kind,
+          lintByKind,
+          cacheKey: exampleLintCacheKey(dialect, entry.dir, kind),
+        });
       }
     }
     return { entry, declared, lintByKind };
@@ -206,9 +219,11 @@ const [lintResults, ...typeErrorsByDialect] = await Promise.all([
   runPlaygroundLintBatch(lintRequests),
   ...dialectPlans.map((plan) => plan.typeErrors),
 ]);
+const cacheEntries = new Map();
 for (let index = 0; index < lintResults.length; index += 1) {
   const target = lintTargets[index];
   target.lintByKind.set(target.kind, lintResults[index]);
+  cacheEntries.set(target.cacheKey, diagnosticsToMarkers(lintResults[index].diagnostics, lintResults[index].engine));
 }
 
 for (let dialectIndex = 0; dialectIndex < dialectPlans.length; dialectIndex += 1) {
@@ -228,5 +243,15 @@ if (failures.length) {
   for (const failure of failures) console.error(`  - ${failure}`);
   process.exitCode = 1;
 } else {
+  if (!dialectFilter && !ruleFilter) {
+    const generated = renderExampleLintCache(cacheEntries);
+    if (writeCache) {
+      writeFileSync(generatedCachePath, generated);
+      console.log('Updated the generated example lint cache.');
+    } else if (!existsSync(generatedCachePath) || readFileSync(generatedCachePath, 'utf8') !== generated) {
+      console.error('\nThe generated example lint cache is stale. Run `pnpm generate:example-lint-cache`.');
+      process.exitCode = 1;
+    }
+  }
   console.log(`\nAll ${checked} example file(s) behave as documented.`);
 }

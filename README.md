@@ -159,7 +159,17 @@ so in the file.
 
 ## Lint latency
 
-Three things keep editor feedback quick:
+Five things keep editor feedback quick:
+
+- **Shipped examples do not wait on a serverless cold start.** The exhaustive
+  verifier writes their exact Oxlint and Solid Checker markers to a generated
+  cache (5.2 kB compressed in the production build). Selecting or resolving an
+  example primes the lint worker before its editor document changes. Hand-edited
+  code still goes through the live endpoint.
+- **Programmatic document loads lint immediately.** Example, reset, format, and
+  fix operations flush CodeMirror's pending lint as soon as their complete
+  document is installed. Interactive typing retains the 250 ms debounce, where
+  it prevents a request per keystroke.
 
 - **The two engines run concurrently.** A plain lint runs Oxlint's native rules
   and `solid-checker` over the same source at once — they only read it — so a
@@ -170,23 +180,27 @@ Three things keep editor feedback quick:
   diagnostic sources are independent, and awaiting the TypeScript service first
   used to hold the checker's findings behind type acquisition — by far the slower
   of the two on a cold editor.
-- **Unchanged content is not re-linted.** Switching tabs, toggling the theme, and
-  changing the Solid version all ask every open editor to relint; the worker
-  replays the last few answers by content instead of re-crossing the network.
+- **Unchanged and concurrent work is shared.** Switching tabs, toggling the
+  theme, and changing the Solid version all ask open editors to relint; the
+  worker replays recent answers by content and coalesces identical requests that
+  arrive before their first result completes.
 
 The `solid-checker` daemon is deliberately left off (`SOLID_CHECKER_DAEMON=0`).
-It caches per project, each request gets a fresh temporary project, and the
-~30 ms it could save is invisible behind the editor's 250 ms debounce — not worth
-the risk of serving a stale analysis.
+It caches per project while each live request gets a fresh temporary project,
+so enabling it would not provide safe cross-request reuse. Static examples
+instead reuse diagnostics that CI generated and verified for their exact source;
+edited code remains an isolated live analysis.
+
+Run `pnpm generate:example-lint-cache` after changing an example or checker
+version. `pnpm test:examples` fails when the generated cache is stale.
 
 ## Continuous integration
 
 `.github/workflows/ci.yml` runs `lint`, `oxfmt --check`, the playground
-typecheck, `test:lint-api`, `test:examples`, and `build`. The last two are the
-ones that matter for this fork: they prove the serverless linter still runs on a
-Linux runner, and that every rule example still reports what its catalog entry
-claims — so a `solid-checker` upgrade that renames or retires a rule fails in CI
-rather than in the deployed UI.
+typecheck, the API/example/worker regression suites, and `build`. These prove
+the serverless linter still runs on Linux, every rule example and generated
+marker matches its catalog entry, primed diagnostics bypass the network, and
+the update cache is not announced repeatedly.
 
 The repository includes a `vercel.json` configuration. Vercel builds the
 workspace with `pnpm build`, serves `packages/playground/dist`, preserves the

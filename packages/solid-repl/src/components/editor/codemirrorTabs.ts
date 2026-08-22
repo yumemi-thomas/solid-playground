@@ -234,6 +234,10 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
   const replaceDoc = (view: EditorView, next: string) => {
     if (view.state.doc.toString() === next) return;
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next } });
+    // Programmatic replacements (examples, reset, format, fix) are complete
+    // documents, not keystrokes. Flush their pending lint immediately while
+    // retaining the normal debounce for interactive typing.
+    forceLinting(view);
   };
 
   const formatView = async (view: EditorView) => {
@@ -319,6 +323,7 @@ export const createCodemirrorTabs = (folder: string, opts: CodemirrorTabsOptions
       languageUri: currentUri(),
       attach(parent, focus = true) {
         parent.appendChild(view.dom);
+        forceLinting(view);
         if (lastTopPos > 0) {
           view.dispatch({ effects: EditorView.scrollIntoView(lastTopPos, { y: 'start' }) });
         }
