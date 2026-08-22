@@ -1,4 +1,5 @@
 const cacheName = 'my-cache';
+let cacheGeneration = 0;
 
 async function notifyClient(event) {
   const client = event.clientId ? await clients.get(event.clientId) : null;
@@ -33,19 +34,29 @@ async function fetchAndCache(cache, event) {
   }
 }
 
+async function invalidateCache(event, generation) {
+  // Several cached requests can discover the same deployment at once. Only the
+  // first one should clear the old generation and notify the page.
+  if (generation !== cacheGeneration) return;
+  cacheGeneration += 1;
+  await caches.delete(cacheName);
+  await notifyClient(event);
+}
+
 async function fetchWithCache(event) {
+  const generation = cacheGeneration;
   const cache = await caches.open(cacheName);
   const cached = await cache.match(event.request);
   const fresh = fetchAndCache(cache, event);
   if (cached) {
-    fresh.then((response) => {
+    const revalidation = fresh.then(async (response) => {
       if (response && responsesDiffer(cached, response)) {
-        notifyClient(event);
+        await invalidateCache(event, generation);
       }
     });
-    return cached;
+    return { response: cached, revalidation: revalidation.catch(() => {}) };
   }
-  return fresh;
+  return { response: fresh };
 }
 
 function handleFetch(event) {
@@ -54,7 +65,9 @@ function handleFetch(event) {
     event.request.method === 'GET' &&
     event.request.url.startsWith(self.location.origin)
   ) {
-    event.respondWith(fetchWithCache(event));
+    const result = fetchWithCache(event);
+    event.respondWith(result.then(({ response }) => response));
+    event.waitUntil(result.then(({ revalidation }) => revalidation));
   }
 }
 

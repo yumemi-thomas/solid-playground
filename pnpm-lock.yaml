@@ -27,9 +27,6 @@ importers:
       '@pandacss/dev':
         specifier: ^1.11.5
         version: 1.11.5(typescript@6.0.3)
-      '@pandacss/eslint-plugin':
-        specifier: ^0.3.2
-        version: 0.3.2(eslint@10.8.0)(typescript@6.0.3)
       '@types/node':
         specifier: ^22.20.1
         version: 22.20.1
@@ -1152,11 +1149,6 @@ packages:
     resolution: {integrity: sha512-FRDGk3CwP375V0u3yxggxUFnusJK1GFd9epGrv4FyhWmHiEURFKv06ipDeA8L052r/vMPhKcM7ZNcZNv1RozHQ==}
     engines: {node: '>=20'}
     hasBin: true
-
-  '@pandacss/eslint-plugin@0.3.2':
-    resolution: {integrity: sha512-zwonbAA8Ghx67EH1WyXOJkRqcN/83nF4Plg0Jc3JdeWPPVN/PXEVwKx6pIhyc1AEUzWOM12WT8to6BGZ8/H83A==}
-    peerDependencies:
-      eslint: '*'
 
   '@pandacss/extractor@1.11.5':
     resolution: {integrity: sha512-Yh7iytQI5BcynSLMz4Vcs5XryWAXOur2pc/OS9geEd9p7TSoEtliXSPjd53mT27GUBNv2ALZHHw44anln5FqzA==}
@@ -4675,23 +4667,6 @@ snapshots:
       cac: 6.7.14
     transitivePeerDependencies:
       - '@cfworker/json-schema'
-      - jsdom
-      - supports-color
-      - typescript
-
-  '@pandacss/eslint-plugin@0.3.2(eslint@10.8.0)(typescript@6.0.3)':
-    dependencies:
-      '@pandacss/config': 1.11.5
-      '@pandacss/generator': 1.11.5
-      '@pandacss/node': 1.11.5(typescript@6.0.3)
-      '@pandacss/shared': 1.11.5
-      '@typescript-eslint/scope-manager': 8.65.0
-      '@typescript-eslint/utils': 8.65.0(eslint@10.8.0)(typescript@6.0.3)
-      eslint: 10.8.0
-      hookable: 5.5.3
-      micromatch: 4.0.8
-      synckit: 0.9.3
-    transitivePeerDependencies:
       - jsdom
       - supports-color
       - typescript

@@ -117,9 +117,12 @@ their metadata lives in `packages/playground/src/examples/catalog.ts`. A rule
 can have several cases when the interesting part is semantic proof rather than
 syntax — for example, a local component named `Loading` is not Solid's actual
 loading boundary. Selecting a rule opens all of its case files together as
-editor tabs, while each case remains independently linted and typechecked. They are
-excluded from the project's own `tsc`, `oxlint`, and `oxfmt` runs, and checked
-by their own script instead:
+editor tabs. The verifier preserves per-file diagnostics while batching
+independent cases into checker projects grouped by Solid dialect and rule
+preset; project-sensitive server-function cases stay isolated. Both dialect
+typechecks run alongside those batches. The examples are excluded from the
+project's own `tsc`, `oxlint`, and `oxfmt` runs, and checked by their own script
+instead:
 
 ```bash
 pnpm run test:examples

@@ -10,14 +10,13 @@
 // Entries marked `standalone: false` are only required to typecheck: they
 // document a rule a single playground file cannot reproduce.
 import { existsSync, readFileSync } from 'node:fs';
-import { availableParallelism } from 'node:os';
 import { resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
 const examplesRoot = resolve(repositoryRoot, 'packages/playground/examples');
 
-const { runPlaygroundLint } = await import(resolve(repositoryRoot, 'api/solid-playground-lint.ts'));
+const { runPlaygroundLintBatch } = await import(resolve(repositoryRoot, 'api/solid-playground-lint.ts'));
 const { EXAMPLES_BY_DIALECT } = await import(resolve(repositoryRoot, 'packages/playground/src/examples/catalog.ts'));
 const { composeExample } = await import(resolve(repositoryRoot, 'packages/playground/src/examples/composeExample.ts'));
 
@@ -38,12 +37,26 @@ function manifestFor(dialect) {
 function typecheck(dialect, files) {
   const tsconfig = resolve(examplesRoot, dialect, 'tsconfig.check.json');
   const tsc = resolve(repositoryRoot, 'packages/playground/node_modules/typescript/bin/tsc');
-  const result = spawnSync(process.execPath, [tsc, '-p', tsconfig, '--noEmit'], {
-    cwd: repositoryRoot,
-    encoding: 'utf8',
+  return new Promise((resolveErrors, reject) => {
+    const child = spawn(process.execPath, [tsc, '-p', tsconfig, '--noEmit'], {
+      cwd: repositoryRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let output = '';
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', (chunk) => {
+      output += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      output += chunk;
+    });
+    child.once('error', reject);
+    child.once('close', () => resolveErrors(typeErrorsFromOutput(output, files)));
   });
-  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
-  if (result.status === 0) return new Map();
+}
+
+function typeErrorsFromOutput(output, files) {
   const byFile = new Map();
   for (const line of output.split('\n')) {
     const match = /^(.*?)\((\d+),(\d+)\): (error .*)$/.exec(line.trim());
@@ -57,24 +70,7 @@ function typecheck(dialect, files) {
   return byFile;
 }
 
-// Each lint is two single-threaded child processes, so a handful of entries can
-// be in flight at once. Results are collected per entry and reported in catalog
-// order, so the output does not depend on which finished first.
-async function inParallel(items, worker, limit) {
-  const results = Array.from({ length: items.length });
-  let next = 0;
-  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (true) {
-      const index = next++;
-      if (index >= items.length) return;
-      results[index] = await worker(items[index]);
-    }
-  });
-  await Promise.all(runners);
-  return results;
-}
-
-async function checkEntry(dialect, entry, declared, typeErrors) {
+function checkEntry(dialect, entry, declared, typeErrors, lintByKind) {
   const failures = [];
   const notes = [];
   let checked = 0;
@@ -108,10 +104,11 @@ async function checkEntry(dialect, entry, declared, typeErrors) {
         }
       }
 
-      // Lint the composition the playground actually loads — header included —
-      // so the header can never introduce or mask a finding.
-      const code = composeExample(entry, kind, readFileSync(file, 'utf8'));
-      const result = await runPlaygroundLint({ code, dialect, fix: false, rule: entry.rule });
+      const result = lintByKind.get(kind);
+      if (!result) {
+        failures.push(`${dialect} ${entry.rule} ${kind}.tsx: was not analysed`);
+        continue;
+      }
       checked += 1;
       const native = result.diagnostics.filter((d) => d.ruleId !== 'solid-checker/certification');
       const codes = result.diagnostics
@@ -159,7 +156,9 @@ async function checkEntry(dialect, entry, declared, typeErrors) {
 const failures = [];
 const notes = [];
 let checked = 0;
-const concurrency = Math.max(2, Math.min(8, availableParallelism() - 2));
+const dialectPlans = [];
+const lintRequests = [];
+const lintTargets = [];
 
 for (const [dialect, entries] of Object.entries(EXAMPLES_BY_DIALECT)) {
   if (dialectFilter && dialect !== dialectFilter) continue;
@@ -172,15 +171,51 @@ for (const [dialect, entries] of Object.entries(EXAMPLES_BY_DIALECT)) {
       typeTargets.add(resolve(examplesRoot, dialect, entry.dir, `${kind}.tsx`));
     }
   }
-  const typeErrors = skipTypes ? new Map() : typecheck(dialect, typeTargets);
-
   const selected = entries.filter((entry) => !ruleFilter || entry.rule.includes(ruleFilter));
-  const results = await inParallel(
-    selected,
-    (entry) => checkEntry(dialect, entry, manifestByName.get(entry.rule), typeErrors),
-    concurrency,
-  );
-  for (const result of results) {
+  const entryPlans = selected.map((entry) => {
+    const declared = manifestByName.get(entry.rule);
+    const lintByKind = new Map();
+    if (declared) {
+      for (const kind of ['incorrect', 'correct']) {
+        const file = resolve(examplesRoot, dialect, entry.dir, `${kind}.tsx`);
+        if (!existsSync(file)) continue;
+        lintRequests.push({
+          code: composeExample(entry, kind, readFileSync(file, 'utf8')),
+          dialect,
+          fix: false,
+          rule: entry.rule,
+          // Server-function transport analysis is intentionally project-wide.
+          // Keep each shipped snippet isolated exactly as it is in the REPL.
+          batchKey: entry.rule === 'server-function-rich-argument' ? `${entry.dir}-${kind}` : undefined,
+        });
+        lintTargets.push({ kind, lintByKind });
+      }
+    }
+    return { entry, declared, lintByKind };
+  });
+  dialectPlans.push({
+    dialect,
+    entryPlans,
+    typeErrors: skipTypes ? Promise.resolve(new Map()) : typecheck(dialect, typeTargets),
+  });
+}
+
+// TypeScript checks both dialect projects while Oxlint and Solid Checker
+// analyse shared batch projects grouped by dialect and checker preset.
+const [lintResults, ...typeErrorsByDialect] = await Promise.all([
+  runPlaygroundLintBatch(lintRequests),
+  ...dialectPlans.map((plan) => plan.typeErrors),
+]);
+for (let index = 0; index < lintResults.length; index += 1) {
+  const target = lintTargets[index];
+  target.lintByKind.set(target.kind, lintResults[index]);
+}
+
+for (let dialectIndex = 0; dialectIndex < dialectPlans.length; dialectIndex += 1) {
+  const plan = dialectPlans[dialectIndex];
+  const typeErrors = typeErrorsByDialect[dialectIndex];
+  for (const { entry, declared, lintByKind } of plan.entryPlans) {
+    const result = checkEntry(plan.dialect, entry, declared, typeErrors, lintByKind);
     failures.push(...result.failures);
     notes.push(...result.notes);
     checked += result.checked;

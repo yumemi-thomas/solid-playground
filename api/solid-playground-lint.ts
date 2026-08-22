@@ -5,6 +5,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -21,6 +22,8 @@ export interface LintRequest {
   fix: boolean;
   /** Selected catalog rule, used to enable opt-in preference examples. */
   rule?: string;
+  /** Optional partition for project-sensitive requests in batch-only tooling. */
+  batchKey?: string;
 }
 
 export interface NormalizedDiagnostic {
@@ -184,25 +187,33 @@ function oxlintConfig() {
   });
 }
 
-function oxlintDiagnostics(output: unknown): NormalizedDiagnostic[] {
+function rawOxlintDiagnostics(output: unknown): Array<Record<string, unknown>> {
   const diagnostics = Array.isArray(output) ? output : (output as { diagnostics?: unknown[] })?.diagnostics;
   if (!Array.isArray(diagnostics)) return [];
-  return diagnostics.map((diagnostic: Record<string, unknown>) => {
-    const span = (
-      diagnostic.labels as Array<{ span?: { line?: number; column?: number; length?: number } }> | undefined
-    )?.[0]?.span;
-    const line = span?.line ?? 1;
-    const column = span?.column ?? 1;
-    return {
-      line,
-      endLine: line,
-      column,
-      endColumn: column + (span?.length ?? 1),
-      message: typeof diagnostic.message === 'string' ? diagnostic.message : 'Oxlint reported a finding.',
-      ruleId: typeof diagnostic.code === 'string' ? diagnostic.code : null,
-      severity: diagnostic.severity === 'warning' ? 1 : 2,
-    };
-  });
+  return diagnostics.filter(
+    (diagnostic): diagnostic is Record<string, unknown> => !!diagnostic && typeof diagnostic === 'object',
+  );
+}
+
+function normalizeOxlintDiagnostic(diagnostic: Record<string, unknown>): NormalizedDiagnostic {
+  const span = (
+    diagnostic.labels as Array<{ span?: { line?: number; column?: number; length?: number } }> | undefined
+  )?.[0]?.span;
+  const line = span?.line ?? 1;
+  const column = span?.column ?? 1;
+  return {
+    line,
+    endLine: line,
+    column,
+    endColumn: column + (span?.length ?? 1),
+    message: typeof diagnostic.message === 'string' ? diagnostic.message : 'Oxlint reported a finding.',
+    ruleId: typeof diagnostic.code === 'string' ? diagnostic.code : null,
+    severity: diagnostic.severity === 'warning' ? 1 : 2,
+  };
+}
+
+function oxlintDiagnostics(output: unknown): NormalizedDiagnostic[] {
+  return rawOxlintDiagnostics(output).map(normalizeOxlintDiagnostic);
 }
 
 function byteOffsetToIndex(source: string, byteOffset: number) {
@@ -225,33 +236,37 @@ function sourcePosition(source: string, byteOffset: unknown) {
   return { line: lines.length, column: (lines.at(-1)?.length ?? 0) + 1 };
 }
 
-function checkerDiagnostics(source: string, output: unknown): NormalizedDiagnostic[] {
+interface CheckerFinding extends Record<string, unknown> {
+  id?: unknown;
+  message?: unknown;
+  severity?: unknown;
+  primaryLocation?: { path?: unknown; startByte?: unknown; endByte?: unknown };
+}
+
+function rawCheckerFindings(output: unknown): CheckerFinding[] {
   const findings = (output as { findings?: unknown[] })?.findings;
   if (!Array.isArray(findings)) return [];
-  return findings.flatMap((finding) => {
-    if (!finding || typeof finding !== 'object') return [];
-    const value = finding as {
-      id?: unknown;
-      message?: unknown;
-      severity?: unknown;
-      primaryLocation?: { startByte?: unknown; endByte?: unknown };
-    };
-    const start = sourcePosition(source, value.primaryLocation?.startByte);
-    const end = sourcePosition(source, value.primaryLocation?.endByte);
-    const id = typeof value.id === 'string' ? value.id : 'checker';
-    const message = typeof value.message === 'string' ? value.message : 'Solid Checker reported a finding.';
-    return [
-      {
-        line: start.line,
-        endLine: end.line,
-        column: start.column,
-        endColumn: end.line === start.line ? Math.max(start.column + 1, end.column) : end.column,
-        message: `[${id}] ${message}`,
-        ruleId: 'solid-checker/certification',
-        severity: value.severity === 'warning' ? 1 : 2,
-      },
-    ];
-  });
+  return findings.filter((finding): finding is CheckerFinding => !!finding && typeof finding === 'object');
+}
+
+function normalizeCheckerFinding(source: string, finding: CheckerFinding): NormalizedDiagnostic {
+  const start = sourcePosition(source, finding.primaryLocation?.startByte);
+  const end = sourcePosition(source, finding.primaryLocation?.endByte);
+  const id = typeof finding.id === 'string' ? finding.id : 'checker';
+  const message = typeof finding.message === 'string' ? finding.message : 'Solid Checker reported a finding.';
+  return {
+    line: start.line,
+    endLine: end.line,
+    column: start.column,
+    endColumn: end.line === start.line ? Math.max(start.column + 1, end.column) : end.column,
+    message: `[${id}] ${message}`,
+    ruleId: 'solid-checker/certification',
+    severity: finding.severity === 'warning' ? 1 : 2,
+  };
+}
+
+function checkerDiagnostics(source: string, output: unknown): NormalizedDiagnostic[] {
+  return rawCheckerFindings(output).map((finding) => normalizeCheckerFinding(source, finding));
 }
 
 interface ProcessResult {
@@ -278,7 +293,7 @@ function run(command: string, args: string[], options: { cwd: string; env: NodeJ
   });
 }
 
-function runLinter(temporaryDirectory: string, fix: boolean) {
+function runLinter(temporaryDirectory: string, fix: boolean, sourceFiles = ['src/Playground.tsx']) {
   const configName = '.oxlintrc.json';
   writeFileSync(resolve(temporaryDirectory, configName), oxlintConfig());
   const executable = packageFile('oxlint', 'bin/oxlint');
@@ -289,7 +304,7 @@ function runLinter(temporaryDirectory: string, fix: boolean) {
     'json',
     '--threads=1',
     ...(fix ? ['--fix'] : []),
-    'src/Playground.tsx',
+    ...sourceFiles,
   ];
   return run(process.execPath, [executable, ...args], {
     cwd: temporaryDirectory,
@@ -297,10 +312,12 @@ function runLinter(temporaryDirectory: string, fix: boolean) {
   });
 }
 
-function runChecker(temporaryDirectory: string, dialect: Dialect, rule?: string) {
+function usesPreferencePreset(rule?: string) {
+  return !!(rule?.endsWith('prefer-classlist') || rule?.endsWith('prefer-for') || rule?.endsWith('prefer-show'));
+}
+
+function runChecker(temporaryDirectory: string, dialect: Dialect, preferences = false) {
   const executable = packageFile('solid-checker', 'bin/solid-checker.mjs');
-  const preference =
-    rule?.endsWith('prefer-classlist') || rule?.endsWith('prefer-for') || rule?.endsWith('prefer-show');
   return run(
     process.execPath,
     [
@@ -319,38 +336,77 @@ function runChecker(temporaryDirectory: string, dialect: Dialect, rule?: string)
       'browser',
       '--runtime-condition',
       'import',
-      ...(preference ? ['--preset', 'preferences'] : []),
+      ...(preferences ? ['--preset', 'preferences'] : []),
     ],
     { cwd: temporaryDirectory, env: { ...process.env, SOLID_CHECKER_DAEMON: '0' } },
   );
 }
 
-export async function runPlaygroundLint(request: LintRequest): Promise<LintResult> {
+interface ProjectSource {
+  relativePath: string;
+  source: string;
+}
+
+function setupPlaygroundProject(temporaryDirectory: string, dialect: Dialect, sources: ProjectSource[]) {
+  mkdirSync(resolve(temporaryDirectory, 'src'), { recursive: true });
+  for (const source of sources) writeFileSync(resolve(temporaryDirectory, source.relativePath), source.source);
+  writeFileSync(
+    resolve(temporaryDirectory, 'tsconfig.json'),
+    JSON.stringify({
+      compilerOptions: {
+        jsx: 'preserve',
+        jsxImportSource: dialect === 'solid-v2' ? '@solidjs/web' : 'solid-js',
+        module: 'ESNext',
+        moduleResolution: 'Bundler',
+        noEmit: true,
+        strict: true,
+        target: 'ES2022',
+      },
+      include: sources.map((source) => source.relativePath),
+    }),
+  );
+  for (const packageName of ['solid-checker', '@solidjs']) symlinkPackage(temporaryDirectory, packageName);
+  const solidSource = dialect === 'solid-v2' ? 'solid-js-v2' : 'solid-js';
+  symlinkPackage(temporaryDirectory, 'solid-js', solidSource);
+  assertSolidMajor(dialect, packagePath('solid-js', solidSource));
+}
+
+function parseLinterOutput(lint: ProcessResult) {
+  if (!lint.stdout.trim() && lint.stderr.trim()) throw new Error(`oxlint failed: ${lint.stderr.trim()}`);
+  try {
+    return JSON.parse(lint.stdout || '[]') as unknown;
+  } catch {
+    throw new Error(lint.stderr.trim() || 'oxlint returned invalid JSON output.');
+  }
+}
+
+function parseCheckerOutput(checker: ProcessResult) {
+  if (checker.status !== 0) {
+    throw new Error(`solid-checker failed: ${checker.stderr.trim() || `exit code ${checker.status}`}`);
+  }
+  try {
+    return JSON.parse(checker.stdout || '{}') as unknown;
+  } catch {
+    throw new Error(checker.stderr.trim() || 'solid-checker returned invalid JSON output.');
+  }
+}
+
+function canonicalPath(path: string) {
+  try {
+    return realpathSync(path);
+  } catch {
+    return resolve(path);
+  }
+}
+
+async function runSinglePlaygroundLint(request: LintRequest): Promise<LintResult> {
   const temporaryDirectory = mkdtempSync(resolve(tmpdir(), 'solid-playground-lint-'));
   try {
-    const sourceDirectory = resolve(temporaryDirectory, 'src');
-    mkdirSync(sourceDirectory, { recursive: true });
-    const sourceFile = resolve(sourceDirectory, 'Playground.tsx');
-    writeFileSync(sourceFile, request.code);
-    writeFileSync(
-      resolve(temporaryDirectory, 'tsconfig.json'),
-      JSON.stringify({
-        compilerOptions: {
-          jsx: 'preserve',
-          jsxImportSource: request.dialect === 'solid-v2' ? '@solidjs/web' : 'solid-js',
-          module: 'ESNext',
-          moduleResolution: 'Bundler',
-          noEmit: true,
-          strict: true,
-          target: 'ES2022',
-        },
-        include: ['src/Playground.tsx'],
-      }),
-    );
-    for (const packageName of ['solid-checker', '@solidjs']) symlinkPackage(temporaryDirectory, packageName);
-    const solidSource = request.dialect === 'solid-v2' ? 'solid-js-v2' : 'solid-js';
-    symlinkPackage(temporaryDirectory, 'solid-js', solidSource);
-    assertSolidMajor(request.dialect, packagePath('solid-js', solidSource));
+    const relativeSourceFile = 'src/Playground.tsx';
+    setupPlaygroundProject(temporaryDirectory, request.dialect, [
+      { relativePath: relativeSourceFile, source: request.code },
+    ]);
+    const sourceFile = resolve(temporaryDirectory, relativeSourceFile);
 
     // The production path intentionally keeps checker out of Oxlint's
     // jsPlugins bridge. Oxlint's native rules and solid-checker then run as
@@ -362,30 +418,17 @@ export async function runPlaygroundLint(request: LintRequest): Promise<LintResul
     // and analyse what Oxlint left behind.
     const engine = 'oxlint';
     const [lint, checker] = request.fix
-      ? [await runLinter(temporaryDirectory, true), await runChecker(temporaryDirectory, request.dialect, request.rule)]
+      ? [
+          await runLinter(temporaryDirectory, true),
+          await runChecker(temporaryDirectory, request.dialect, usesPreferencePreset(request.rule)),
+        ]
       : await Promise.all([
           runLinter(temporaryDirectory, false),
-          runChecker(temporaryDirectory, request.dialect, request.rule),
+          runChecker(temporaryDirectory, request.dialect, usesPreferencePreset(request.rule)),
         ]);
 
-    if (!lint.stdout.trim() && lint.stderr.trim()) {
-      throw new Error(`${engine} failed: ${lint.stderr.trim()}`);
-    }
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(lint.stdout || '[]');
-    } catch {
-      throw new Error(lint.stderr.trim() || `${engine} returned invalid JSON output.`);
-    }
-    if (checker.status !== 0) {
-      throw new Error(`solid-checker failed: ${checker.stderr.trim() || `exit code ${checker.status}`}`);
-    }
-    let checkerOutput: unknown;
-    try {
-      checkerOutput = JSON.parse(checker.stdout || '{}');
-    } catch {
-      throw new Error(checker.stderr.trim() || 'solid-checker returned invalid JSON output.');
-    }
+    const parsed = parseLinterOutput(lint);
+    const checkerOutput = parseCheckerOutput(checker);
     const currentSource = readFileSync(sourceFile, 'utf8');
     const output = request.fix ? readFileSync(sourceFile, 'utf8') : undefined;
     return {
@@ -397,6 +440,93 @@ export async function runPlaygroundLint(request: LintRequest): Promise<LintResul
   } finally {
     rmSync(temporaryDirectory, { recursive: true, force: true });
   }
+}
+
+interface IndexedLintRequest {
+  index: number;
+  request: LintRequest;
+}
+
+async function runPlaygroundLintGroup(items: IndexedLintRequest[]): Promise<Array<[number, LintResult]>> {
+  const [{ request }] = items;
+  const preferences = usesPreferencePreset(request.rule);
+  const temporaryDirectory = mkdtempSync(resolve(tmpdir(), 'solid-playground-lint-batch-'));
+  try {
+    const sources = items.map(({ index, request: itemRequest }) => ({
+      relativePath: `src/Playground-${index}.tsx`,
+      source: itemRequest.code,
+    }));
+    setupPlaygroundProject(temporaryDirectory, request.dialect, sources);
+
+    const indexByPath = new Map<string, number>();
+    const sourceByIndex = new Map<number, string>();
+    for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
+      const { index, request: itemRequest } = items[itemIndex];
+      indexByPath.set(canonicalPath(resolve(temporaryDirectory, sources[itemIndex].relativePath)), index);
+      sourceByIndex.set(index, itemRequest.code);
+    }
+
+    const sourceFiles = sources.map((source) => source.relativePath);
+    const [lint, checker] = await Promise.all([
+      runLinter(temporaryDirectory, false, sourceFiles),
+      runChecker(temporaryDirectory, request.dialect, preferences),
+    ]);
+    const diagnosticsByIndex = new Map(items.map(({ index }) => [index, [] as NormalizedDiagnostic[]]));
+
+    for (const diagnostic of rawOxlintDiagnostics(parseLinterOutput(lint))) {
+      if (typeof diagnostic.filename !== 'string') throw new Error('oxlint returned a diagnostic without a filename.');
+      const index = indexByPath.get(canonicalPath(resolve(temporaryDirectory, diagnostic.filename)));
+      if (index === undefined)
+        throw new Error(`oxlint returned a diagnostic for an unknown file: ${diagnostic.filename}`);
+      diagnosticsByIndex.get(index)!.push(normalizeOxlintDiagnostic(diagnostic));
+    }
+
+    for (const finding of rawCheckerFindings(parseCheckerOutput(checker))) {
+      const findingPath = finding.primaryLocation?.path;
+      if (typeof findingPath !== 'string') {
+        throw new Error('solid-checker returned a finding without a primary source path.');
+      }
+      const index = indexByPath.get(canonicalPath(findingPath));
+      if (index === undefined) throw new Error(`solid-checker returned a finding for an unknown file: ${findingPath}`);
+      diagnosticsByIndex.get(index)!.push(normalizeCheckerFinding(sourceByIndex.get(index)!, finding));
+    }
+
+    return items.map(({ index }) => [
+      index,
+      { engine: 'oxlint', diagnostics: diagnosticsByIndex.get(index)!, output: undefined, fixed: false },
+    ]);
+  } finally {
+    rmSync(temporaryDirectory, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Analyse independent snippets in shared projects. Requests are grouped by the
+ * checker inputs that affect project-wide analysis, while results retain input
+ * order and per-file diagnostic attribution.
+ */
+export async function runPlaygroundLintBatch(requests: LintRequest[]): Promise<LintResult[]> {
+  if (requests.some((request) => request.fix)) return Promise.all(requests.map(runSinglePlaygroundLint));
+
+  const groups = new Map<string, IndexedLintRequest[]>();
+  for (let index = 0; index < requests.length; index += 1) {
+    const request = requests[index];
+    const key = `${request.dialect}\0${usesPreferencePreset(request.rule)}\0${request.batchKey ?? ''}`;
+    const group = groups.get(key) ?? [];
+    group.push({ index, request });
+    groups.set(key, group);
+  }
+
+  const results = Array.from({ length: requests.length }) as LintResult[];
+  const groupedResults = await Promise.all([...groups.values()].map(runPlaygroundLintGroup));
+  for (const group of groupedResults) {
+    for (const [index, result] of group) results[index] = result;
+  }
+  return results;
+}
+
+export function runPlaygroundLint(request: LintRequest): Promise<LintResult> {
+  return runSinglePlaygroundLint(request);
 }
 
 interface VercelRequest {
