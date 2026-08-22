@@ -100,7 +100,7 @@ export const Header: Component<{
   return (
     <header class={headerStyles}>
       <img src={logo} alt="solid-js logo" class={css({ w: 8, flexShrink: 0 })} />
-      <h1 class={titleStyles}>Solid-Checker Playground</h1>
+      <h1 class={titleStyles}>Solid Checker Playground</h1>
 
       <div class={css({ ml: 'auto', display: 'flex', alignItems: 'center', gap: 2, minW: 0 })}>
         <Show
