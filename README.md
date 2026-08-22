@@ -2,12 +2,14 @@
   <img width="100%" src="https://assets.solidjs.com/banner?project=Playground&type=core" alt="Solid Playground">
 </p>
 
-# Solid-Checker Playground
+# Solid Checker Playground
 
-This is the source code of the [solid playground](https://playground.solidjs.com) website.
-Through it you can quickly discover what the Solid compiler will generate from your JSX templates and see Solid Checker diagnostics while editing.
+Solid Checker Playground is a fork of
+[Solid Playground](https://github.com/solidjs/solid-playground). It keeps the
+upstream UI for exploring what the Solid compiler generates from JSX templates
+and adds Solid Checker diagnostics while editing.
 
-This checkout keeps the upstream Solid Playground UI and replaces its in-browser
+This fork replaces the upstream playground's in-browser
 Solid linting with a Vite dev-server boundary. The boundary runs the published
 `solid-checker@0.4.0-beta.1` native binary alongside Oxlint's own rules; it does
 not load `eslint-plugin-solid` or `eslint-solid-standalone`.
@@ -41,7 +43,7 @@ Once you got it up and running you can follow these steps the have a fully worki
 
 ```bash
 # Clone the project
-$ git clone https://github.com/solidjs/solid-playground
+$ git clone https://github.com/yumemi-thomas/solid-playground
 
 # cd into the project and install the dependencies
 $ cd solid-playground && pnpm i

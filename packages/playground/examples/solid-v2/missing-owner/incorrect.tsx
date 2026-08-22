@@ -1,16 +1,14 @@
-import { Loading, createEffect, createSignal, onCleanup, onSettled } from 'solid-js';
+import { createEffect, createSignal } from 'solid-js';
 
 declare function applyTheme(value: string): void;
-declare function poll(): void;
 
 const [theme] = createSignal('light');
 
-// All four operations run at module scope, where no owner can dispose them.
-createEffect(() => theme(), (value) => applyTheme(value));
-onCleanup(() => applyTheme('disposed'));
-onSettled(() => {
-  const id = setInterval(poll, 5000);
-  return () => clearInterval(id);
-});
+// Module scope has no owner, so this subscription survives for the lifetime of
+// the app and can never be disposed with a component tree.
+createEffect(
+  () => theme(),
+  (value) => applyTheme(value),
+);
 
-export const orphanBoundary = <Loading fallback={<span>Loading…</span>}><p>Profile</p></Loading>;
+export const themeName = () => theme();

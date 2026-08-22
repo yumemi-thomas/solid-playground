@@ -1,15 +1,10 @@
-import { createMemo, onCleanup, onSettled, flush } from 'solid-js';
+import { createMemo, onSettled } from 'solid-js';
 
-declare function tick(): void;
-
-// onSettled is a leaf owner: it cannot attach children, register onCleanup, or
-// re-enter the flush cycle. This deliberately puts all three forbidden forms
-// in one callback so the example covers the merged SC3001 rule.
+// onSettled is a leaf owner: it cannot attach a child computation that needs
+// ownership and disposal.
 export function Widget() {
   onSettled(() => {
     const label = createMemo(() => 'ticking');
-    onCleanup(() => tick());
-    flush();
     console.log(label());
   });
   return <div>ticking</div>;

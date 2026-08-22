@@ -1,4 +1,4 @@
-import { createMemo, createSignal } from 'solid-js';
+import { Loading, createMemo, createSignal } from 'solid-js';
 
 interface User {
   name: string;
@@ -11,11 +11,13 @@ async function fetchUser(userId: string): Promise<User> {
   return response.json() as Promise<User>;
 }
 
-// The async node declares its first paint. The synchronous node only reads the
-// already-readable value and can therefore keep sync: true.
-const user = createMemo(() => fetchUser(id()), { loadingValue: { name: 'anonymous' } });
-const initials = createMemo(() => user().name.slice(0, 1), { sync: true });
+// Removing the false sync promise lets the value suspend normally.
+const user = createMemo(() => fetchUser(id()));
 
 export function Profile() {
-  return <h1>{initials()}</h1>;
+  return (
+    <Loading fallback={<p>Loading…</p>}>
+      <h1>{user().name}</h1>
+    </Loading>
+  );
 }

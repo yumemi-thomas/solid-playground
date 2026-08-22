@@ -1,16 +1,10 @@
-import { createSignal, onMount } from 'solid-js';
+import { createMemo, createSignal } from 'solid-js';
 
-// Imperative writes belong in imperative scopes: an event handler, or `onMount`
-// for one-time setup, which runs after render rather than during it.
+// This value is a derivation, so model it directly instead of writing from one
+// reactive computation into another signal.
 export function Counter() {
   const [count, setCount] = createSignal(0);
-  const [ready, setReady] = createSignal(false);
+  const doubled = createMemo(() => count() * 2);
 
-  onMount(() => setReady(true));
-
-  return (
-    <button onClick={() => setCount((previous) => previous + 1)}>
-      {count()} {String(ready())}
-    </button>
-  );
+  return <button onClick={() => setCount((previous) => previous + 1)}>{doubled()}</button>;
 }

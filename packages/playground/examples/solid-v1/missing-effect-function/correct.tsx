@@ -1,17 +1,13 @@
-import { createEffect, createSignal, onCleanup } from 'solid-js';
+import { createEffect, createSignal } from 'solid-js';
 
 const [name] = createSignal('Ada');
 
-// The effect function is the first argument. The optional second argument is a
-// value — the initial `prev` — not a second callback, and cleanup is registered
-// with `onCleanup` rather than returned.
+// The callable effect function is the first argument and reads the dependency
+// Solid should track.
 function Logger() {
   createEffect(() => {
-    const id = setInterval(() => console.log(name()), 1000);
-    onCleanup(() => clearInterval(id));
+    console.log(name());
   });
-
-  createEffect((previous: number) => previous + 1, 0);
 
   return <div>{name()}</div>;
 }
